@@ -177,4 +177,54 @@ class AuthFilterTest {
         verify(response).sendError(403, "Access denied - this page requires the BUYER role");
         verify(chain, never()).doFilter(any(), any());
     }
+
+    @Test
+    void anonymousUserIsRedirectedToLoginOnSellerOrders() throws Exception {
+        when(request.getContextPath()).thenReturn("/ayeshamart");
+        when(request.getRequestURI()).thenReturn("/ayeshamart/seller/orders");
+        when(request.getSession(false)).thenReturn(null);
+
+        filter.doFilter(request, response, chain);
+
+        verify(response).sendRedirect("/ayeshamart/login?redirect=%2Fseller%2Forders");
+        verify(chain, never()).doFilter(any(), any());
+    }
+
+    @Test
+    void buyerGetsForbiddenOnSellerDashboard() throws Exception {
+        HttpSession session = sessionWithRole("BUYER");
+        when(request.getContextPath()).thenReturn("/ayeshamart");
+        when(request.getRequestURI()).thenReturn("/ayeshamart/seller/dashboard");
+        when(request.getSession(false)).thenReturn(session);
+
+        filter.doFilter(request, response, chain);
+
+        verify(response).sendError(403, "Access denied - this page requires the SELLER role");
+        verify(chain, never()).doFilter(any(), any());
+    }
+
+    @Test
+    void adminGetsForbiddenOnSellerOrders() throws Exception {
+        HttpSession session = sessionWithRole("ADMIN");
+        when(request.getContextPath()).thenReturn("/ayeshamart");
+        when(request.getRequestURI()).thenReturn("/ayeshamart/seller/orders");
+        when(request.getSession(false)).thenReturn(session);
+
+        filter.doFilter(request, response, chain);
+
+        verify(response).sendError(403, "Access denied - this page requires the SELLER role");
+        verify(chain, never()).doFilter(any(), any());
+    }
+
+    @Test
+    void sellerPassesOnSellerOrders() throws Exception {
+        HttpSession session = sessionWithRole("SELLER");
+        when(request.getContextPath()).thenReturn("/ayeshamart");
+        when(request.getRequestURI()).thenReturn("/ayeshamart/seller/orders");
+        when(request.getSession(false)).thenReturn(session);
+
+        filter.doFilter(request, response, chain);
+
+        verify(chain).doFilter(request, response);
+    }
 }
