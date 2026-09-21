@@ -1,0 +1,119 @@
+package com.ayeshamart.dao;
+
+import com.ayeshamart.model.Product;
+import com.ayeshamart.util.ConnectionManager;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Data access for the products table. All SQL uses PreparedStatement.
+ * UPDATE and DELETE bind the seller_id as well so a seller can only
+ * touch their own rows at the database level too.
+ */
+public class ProductDAO {
+
+    private static final String INSERT =
+            "INSERT INTO products (seller_id, name, description, price, stock_qty, category, image_url) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+    private static final String SELECT_BY_ID =
+            "SELECT id, seller_id, name, description, price, stock_qty, category, image_url, created_at "
+                    + "FROM products WHERE id = ?";
+    private static final String SELECT_BY_SELLER =
+            "SELECT id, seller_id, name, description, price, stock_qty, category, image_url, created_at "
+                    + "FROM products WHERE seller_id = ? ORDER BY created_at DESC, id DESC";
+    private static final String UPDATE =
+            "UPDATE products SET name = ?, description = ?, price = ?, stock_qty = ?, category = ?, image_url = ? "
+                    + "WHERE id = ? AND seller_id = ?";
+    private static final String DELETE =
+            "DELETE FROM products WHERE id = ? AND seller_id = ?";
+
+    public Product create(Product product) throws SQLException {
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS)) {
+            statement.setLong(1, product.getSellerId());
+            statement.setString(2, product.getName());
+            statement.setString(3, product.getDescription());
+            statement.setBigDecimal(4, product.getPrice());
+            statement.setInt(5, product.getStockQty());
+            statement.setString(6, product.getCategory());
+            statement.setString(7, product.getImageUrl());
+            statement.executeUpdate();
+
+            try (ResultSet keys = statement.getGeneratedKeys()) {
+                if (keys.next()) {
+                    product.setId(keys.getLong(1));
+                }
+            }
+            return product;
+        }
+    }
+
+    public Product findById(long id) throws SQLException {
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(SELECT_BY_ID)) {
+            statement.setLong(1, id);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next() ? mapRow(resultSet) : null;
+            }
+        }
+    }
+
+    public List<Product> findBySellerId(long sellerId) throws SQLException {
+        List<Product> products = new ArrayList<>();
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(SELECT_BY_SELLER)) {
+            statement.setLong(1, sellerId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    products.add(mapRow(resultSet));
+                }
+            }
+        }
+        return products;
+    }
+
+    public boolean update(long productId, long sellerId, Product product) throws SQLException {
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(UPDATE)) {
+            statement.setString(1, product.getName());
+            statement.setString(2, product.getDescription());
+            statement.setBigDecimal(3, product.getPrice());
+            statement.setInt(4, product.getStockQty());
+            statement.setString(5, product.getCategory());
+            statement.setString(6, product.getImageUrl());
+            statement.setLong(7, productId);
+            statement.setLong(8, sellerId);
+            return statement.executeUpdate() > 0;
+        }
+    }
+
+    public boolean delete(long productId, long sellerId) throws SQLException {
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(DELETE)) {
+            statement.setLong(1, productId);
+            statement.setLong(2, sellerId);
+            return statement.executeUpdate() > 0;
+        }
+    }
+
+    private Product mapRow(ResultSet resultSet) throws SQLException {
+        Product product = new Product();
+        product.setId(resultSet.getLong("id"));
+        product.setSellerId(resultSet.getLong("seller_id"));
+        product.setName(resultSet.getString("name"));
+        product.setDescription(resultSet.getString("description"));
+        product.setPrice(resultSet.getBigDecimal("price"));
+        product.setStockQty(resultSet.getInt("stock_qty"));
+        product.setCategory(resultSet.getString("category"));
+        product.setImageUrl(resultSet.getString("image_url"));
+        product.setCreatedAt(resultSet.getObject("created_at", LocalDateTime.class));
+        return product;
+    }
+}
