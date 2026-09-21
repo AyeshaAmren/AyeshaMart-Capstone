@@ -12,6 +12,8 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Initializes the H2 database on first startup:
@@ -32,6 +34,7 @@ public final class DatabaseInitializer {
         try (Connection connection = dataSource.getConnection()) {
             log.info("Running schema.sql");
             runScript(connection, SCHEMA);
+            migrateOrderStatus(connection);
 
             if (isUsersTableEmpty(connection)) {
                 log.info("Users table empty - running seed.sql");
@@ -39,6 +42,47 @@ public final class DatabaseInitializer {
             } else {
                 log.info("Users table already has data - skipping seed.sql");
             }
+        }
+    }
+
+    /**
+     * Phase 5 migration: orders previously allowed only
+     * PLACED/SHIPPED/DELIVERED/CANCELLED. Checkout creates orders with
+     * status PENDING, so any existing CHECK constraint on the orders table
+     * that does not already permit PENDING is dropped and replaced.
+     * The constraint name is never guessed (auto-names like CONSTRAINT_8B);
+     * it is read from information_schema so the migration is idempotent.
+     */
+    private static void migrateOrderStatus(Connection connection) throws SQLException {
+        try (Statement statement = connection.createStatement()) {
+            List<String> toDrop = new ArrayList<>();
+            try (ResultSet resultSet = statement.executeQuery(
+                    "SELECT tc.constraint_name "
+                            + "FROM information_schema.table_constraints tc "
+                            + "JOIN information_schema.check_constraints cc "
+                            + "  ON cc.constraint_name = tc.constraint_name "
+                            + " AND cc.constraint_schema = tc.constraint_schema "
+                            + "WHERE tc.table_schema = 'PUBLIC' "
+                            + "  AND tc.table_name = 'ORDERS' "
+                            + "  AND tc.constraint_type = 'CHECK' "
+                            + "  AND cc.check_clause LIKE '%STATUS%' "
+                            + "  AND UPPER(cc.check_clause) NOT LIKE '%PENDING%'")) {
+                while (resultSet.next()) {
+                    toDrop.add(resultSet.getString(1));
+                }
+            }
+
+            for (String constraint : toDrop) {
+                log.info("Dropping old orders status CHECK constraint {}", constraint);
+                statement.execute("ALTER TABLE orders DROP CONSTRAINT " + constraint);
+            }
+
+            if (!toDrop.isEmpty()) {
+                statement.execute("ALTER TABLE orders ADD CONSTRAINT orders_status_check "
+                        + "CHECK (status IN ('PENDING', 'PLACED', 'SHIPPED', 'DELIVERED', 'CANCELLED'))");
+            }
+        } catch (SQLException e) {
+            log.warn("Could not migrate orders status check (may already be correct)", e);
         }
     }
 

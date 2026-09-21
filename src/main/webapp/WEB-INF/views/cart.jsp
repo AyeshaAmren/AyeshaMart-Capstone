@@ -95,7 +95,7 @@
 
             <div class="row-between cart-total">
                 <h2>Cart Total: Rs. <c:out value="${cartTotal}"/></h2>
-                <a class="btn disabled" href="#" title="Checkout comes in the next phase">Checkout (coming soon)</a>
+                <a class="btn accent" href="${pageContext.request.contextPath}/buyer/checkout">Proceed to Checkout</a>
             </div>
         </c:otherwise>
     </c:choose>

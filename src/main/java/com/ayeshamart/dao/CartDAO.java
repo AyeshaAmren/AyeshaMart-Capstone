@@ -55,9 +55,15 @@ public class CartDAO {
     }
 
     public List<CartItem> findByUserId(long userId) throws SQLException {
+        try (Connection connection = ConnectionManager.getConnection()) {
+            return findByUserId(connection, userId);
+        }
+    }
+
+    /** Reads a user's cart lines on a caller-managed (transactional) connection. */
+    public List<CartItem> findByUserId(Connection connection, long userId) throws SQLException {
         List<CartItem> items = new ArrayList<>();
-        try (Connection connection = ConnectionManager.getConnection();
-             PreparedStatement statement = connection.prepareStatement(SELECT_BY_USER)) {
+        try (PreparedStatement statement = connection.prepareStatement(SELECT_BY_USER)) {
             statement.setLong(1, userId);
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
@@ -66,6 +72,15 @@ public class CartDAO {
             }
         }
         return items;
+    }
+
+    /** Removes every cart row of the user. Used by checkout, scoped by user_id. */
+    public boolean clear(Connection connection, long userId) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(
+                "DELETE FROM cart_items WHERE user_id = ?")) {
+            statement.setLong(1, userId);
+            return statement.executeUpdate() > 0;
+        }
     }
 
     public Optional<CartItem> findByUserAndProduct(long userId, long productId) throws SQLException {

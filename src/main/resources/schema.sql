@@ -39,8 +39,8 @@ CREATE INDEX IF NOT EXISTS idx_products_category ON products (category);
 CREATE TABLE IF NOT EXISTS orders (
     id           BIGINT AUTO_INCREMENT PRIMARY KEY,
     buyer_id     BIGINT        NOT NULL,
-    status       VARCHAR(20)   NOT NULL DEFAULT 'PLACED'
-                 CHECK (status IN ('PLACED', 'SHIPPED', 'DELIVERED', 'CANCELLED')),
+    status       VARCHAR(20)   NOT NULL DEFAULT 'PENDING'
+                 CHECK (status IN ('PENDING', 'PLACED', 'SHIPPED', 'DELIVERED', 'CANCELLED')),
     total_amount DECIMAL(10,2) NOT NULL CHECK (total_amount >= 0),
     created_at   TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_orders_buyer FOREIGN KEY (buyer_id) REFERENCES users (id)
@@ -94,3 +94,6 @@ CREATE TABLE IF NOT EXISTS reviews (
 
 CREATE INDEX IF NOT EXISTS idx_reviews_product ON reviews (product_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_user    ON reviews (user_id);
+
+-- Phase 5: a buyer may review a product only once.
+ALTER TABLE reviews ADD CONSTRAINT IF NOT EXISTS uq_reviews_user_product UNIQUE (user_id, product_id);

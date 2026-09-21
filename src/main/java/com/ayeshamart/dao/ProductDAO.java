@@ -61,12 +61,35 @@ public class ProductDAO {
     }
 
     public Product findById(long id) throws SQLException {
-        try (Connection connection = ConnectionManager.getConnection();
-             PreparedStatement statement = connection.prepareStatement(SELECT_BY_ID)) {
+        try (Connection connection = ConnectionManager.getConnection()) {
+            return findById(connection, id);
+        }
+    }
+
+    /** Reads one product on a caller-managed (transactional) connection. */
+    public Product findById(Connection connection, long id) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(SELECT_BY_ID)) {
             statement.setLong(1, id);
             try (ResultSet resultSet = statement.executeQuery()) {
                 return resultSet.next() ? mapRow(resultSet) : null;
             }
+        }
+    }
+
+    /**
+     * Atomically removes quantity from a product's stock. The WHERE clause
+     * re-checks stock_qty >= quantity so a checkout can never oversell, even
+     * if the cart was read moments earlier. Returns false when there is not
+     * enough stock (no row updated), leaving the row untouched.
+     */
+    public boolean decreaseStock(Connection connection, long productId, int quantity) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(
+                "UPDATE products SET stock_qty = stock_qty - ? "
+                        + "WHERE id = ? AND stock_qty >= ?")) {
+            statement.setInt(1, quantity);
+            statement.setLong(2, productId);
+            statement.setInt(3, quantity);
+            return statement.executeUpdate() > 0;
         }
     }
 

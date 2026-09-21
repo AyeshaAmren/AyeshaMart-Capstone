@@ -873,3 +873,265 @@ section h2 {
         height: 240px;
     }
 }
+
+/* ============================================================
+   Phase 5 - Checkout, Orders and Reviews
+   ============================================================ */
+
+.steps {
+    list-style: none;
+    display: flex;
+    gap: 0.25rem;
+    padding: 0;
+    margin: 0.2rem 0 1.4rem;
+    flex-wrap: wrap;
+}
+
+.steps li {
+    flex: 1;
+    min-width: 120px;
+    text-align: center;
+    padding: 0.55rem 0.6rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #777;
+    background: #f3f4f6;
+    border: 1px solid #e3e6ea;
+    border-radius: 6px;
+}
+
+.steps li + li {
+    margin-left: 0.35rem;
+}
+
+.steps li.active {
+    color: #fff;
+    background: var(--primary);
+    border-color: var(--primary);
+}
+
+.steps li.done {
+    color: #2874f0;
+    background: #eaf1ff;
+    border-color: #c7d8ff;
+}
+
+.narrow {
+    max-width: 620px;
+}
+
+.card-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    padding: 1.3rem 1.4rem;
+    margin-bottom: 1.1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.card-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #222;
+}
+
+.card-form .row {
+    display: flex;
+    gap: 0.9rem;
+}
+
+.card-form .row label {
+    flex: 1;
+}
+
+.demo-note {
+    background: #fff8e1;
+    border: 1px solid #ffe082;
+    color: #8a6d00;
+}
+
+.free-delivery {
+    color: #16a34a;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.muted-link {
+    color: var(--primary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.muted-link:hover {
+    text-decoration: underline;
+}
+
+.confirmation {
+    text-align: center;
+    max-width: 560px;
+    margin: 0 auto;
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 2.6rem 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.confirmation-icon {
+    width: 74px;
+    height: 74px;
+    line-height: 74px;
+    border-radius: 50%;
+    margin: 0 auto 1rem;
+    background: #16a34a;
+    color: #fff;
+    font-size: 2.1rem;
+    font-weight: 800;
+}
+
+.confirmation h1 {
+    font-size: 1.6rem;
+    margin: 0 0 0.5rem;
+}
+
+.confirmation-copy {
+    color: #555;
+    font-size: 0.95rem;
+    line-height: 1.55;
+}
+
+.confirmation-detail {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.7rem;
+    margin: 1.4rem 0;
+    text-align: center;
+}
+
+.confirmation-detail > div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    background: #f7f8fa;
+    border-radius: 8px;
+    padding: 0.7rem 0.4rem;
+}
+
+.confirmation-actions {
+    display: flex;
+    gap: 0.6rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.28rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+}
+
+.st-pending {
+    color: #b45309;
+    background: #fff3dc;
+    border: 1px solid #fcd083;
+}
+
+.order-info {
+    display: flex;
+    gap: 1.2rem;
+    flex-wrap: wrap;
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    padding: 0.9rem 1.2rem;
+    margin-bottom: 1.1rem;
+}
+
+.order-info > div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3.4rem 1.4rem;
+    background: #fff;
+    border: 1px dashed #cfd4da;
+    border-radius: 12px;
+}
+
+.empty-state h2 {
+    margin: 0 0 0.35rem;
+    font-size: 1.25rem;
+}
+
+.reviews {
+    margin-top: 2rem;
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 1.3rem 1.5rem;
+}
+
+.reviews h2 {
+    font-size: 1.2rem;
+    margin: 0 0 0.2rem;
+}
+
+.stars {
+    color: #e8a100;
+    font-size: 1.05rem;
+    letter-spacing: 0.1em;
+}
+
+.review-cta {
+    margin: 1rem 0;
+}
+
+.review-form {
+    margin: 1.1rem 0;
+    border-color: #eff3ff;
+    background: #fbfcff;
+}
+
+.review-form textarea,
+.review-form select {
+    font-family: inherit;
+    font-size: 0.95rem;
+}
+
+.review-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    margin-top: 0.8rem;
+}
+
+.review-card {
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    background: #fdfdfd;
+}
+
+.review-card .row-between {
+    margin-bottom: 0.15rem;
+}
+
+.review-comment {
+    margin: 0.45rem 0 0;
+    color: #333;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
