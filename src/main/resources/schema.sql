@@ -48,6 +48,27 @@ CREATE TABLE IF NOT EXISTS orders (
 
 CREATE INDEX IF NOT EXISTS idx_orders_buyer ON orders (buyer_id);
 
+-- Phase 7: shipping snapshot + mock payment metadata.
+-- Shipping is captured ONCE at checkout and stored with the order so the
+-- original address remains available even if the buyer's profile changes.
+-- Only safe payment metadata is stored - never card numbers, CVV or OTPs.
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_full_name       VARCHAR(100);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_phone          VARCHAR(20);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_address_line1  VARCHAR(200);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_address_line2  VARCHAR(200);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_city           VARCHAR(100);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_state          VARCHAR(100);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_pincode        VARCHAR(10);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_landmark       VARCHAR(200);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_method          VARCHAR(20);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_status          VARCHAR(10);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_reference       VARCHAR(50);
+
+ALTER TABLE orders ADD CONSTRAINT IF NOT EXISTS orders_payment_method_check
+    CHECK (payment_method IN ('UPI', 'GPAY', 'CARD', 'COD'));
+ALTER TABLE orders ADD CONSTRAINT IF NOT EXISTS orders_payment_status_check
+    CHECK (payment_status IN ('SUCCESS', 'PENDING', 'FAILED'));
+
 -- order_items: line items inside an order
 CREATE TABLE IF NOT EXISTS order_items (
     id         BIGINT AUTO_INCREMENT PRIMARY KEY,

@@ -37,6 +37,13 @@
             <span class="muted">Your items total</span>
             <strong>Rs. <c:out value="${orderTotal}"/></strong>
         </div>
+        <div>
+            <span class="muted">Payment</span>
+            <strong>
+                <span class="pay-badge"><c:out value="${paymentMethod}"/></span>
+                <span class="pay-badge pay-${fn:toLowerCase(paymentStatus)}"><c:out value="${paymentStatus}"/></span>
+            </strong>
+        </div>
     </div>
 
     <div class="table-scroll">
@@ -72,6 +79,18 @@
             </tbody>
         </table>
     </div>
+
+    <c:if test="${not empty shippingAddressLine1}">
+        <div class="shipping-card">
+            <h2 class="small-title">Shipping Address</h2>
+            <p>
+                <strong><c:out value="${shippingFullName}"/></strong> &middot; <c:out value="${shippingPhone}"/><br>
+                <c:out value="${shippingAddressLine1}"/><c:if test="${not empty shippingAddressLine2}">, <c:out value="${shippingAddressLine2}"/></c:if><br>
+                <c:out value="${shippingCity}"/>, <c:out value="${shippingState}"/> - <c:out value="${shippingPincode}"/>
+                <c:if test="${not empty shippingLandmark}"><br><span class="muted">Landmark: <c:out value="${shippingLandmark}"/></span></c:if>
+            </p>
+        </div>
+    </c:if>
 
     <c:choose>
         <c:when test="${empty allowedNext}">

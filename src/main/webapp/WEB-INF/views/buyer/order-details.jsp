@@ -23,7 +23,17 @@
         </div>
         <div>
             <span class="muted">Status</span>
-            <strong><span class="status-badge st-pending"><c:out value="${order.status}"/></span></strong>
+            <strong><span class="status-badge st-${fn:toLowerCase(order.status)}"><c:out value="${order.status}"/></span></strong>
+        </div>
+        <div>
+            <span class="muted">Payment</span>
+            <strong>
+                <span class="pay-badge"><c:out value="${order.paymentMethod}"/></span>
+                <span class="pay-badge pay-${fn:toLowerCase(order.paymentStatus)}"><c:out value="${order.paymentStatus}"/></span>
+                <c:if test="${not empty order.paymentReference}">
+                    <div class="muted small">Ref: <c:out value="${order.paymentReference}"/></div>
+                </c:if>
+            </strong>
         </div>
     </div>
 
@@ -71,6 +81,18 @@
         </div>
         <a class="btn accent" href="${pageContext.request.contextPath}/products">Continue shopping</a>
     </div>
+
+    <c:if test="${not empty order.shippingAddressLine1}">
+        <div class="shipping-card">
+            <h2 class="small-title">Delivery Address</h2>
+            <p>
+                <strong><c:out value="${order.shippingFullName}"/></strong> &middot; <c:out value="${order.shippingPhone}"/><br>
+                <c:out value="${order.shippingAddressLine1}"/><c:if test="${not empty order.shippingAddressLine2}">, <c:out value="${order.shippingAddressLine2}"/></c:if><br>
+                <c:out value="${order.shippingCity}"/>, <c:out value="${order.shippingState}"/> - <c:out value="${order.shippingPincode}"/><br>
+                <c:if test="${not empty order.shippingLandmark}"><span class="muted">Landmark: <c:out value="${order.shippingLandmark}"/></span></c:if>
+            </p>
+        </div>
+    </c:if>
 </main>
 
 <%@ include file="../fragments/footer.jsp" %>

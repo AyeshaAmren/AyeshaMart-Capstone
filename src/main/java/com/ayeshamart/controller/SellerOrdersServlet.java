@@ -1,6 +1,8 @@
 package com.ayeshamart.controller;
 
+import com.ayeshamart.dao.OrderDAO;
 import com.ayeshamart.exception.ValidationException;
+import com.ayeshamart.model.Order;
 import com.ayeshamart.model.SellerOrderLine;
 import com.ayeshamart.service.SellerService;
 import com.ayeshamart.util.AuthUtil;
@@ -27,6 +29,7 @@ import java.util.List;
 public class SellerOrdersServlet extends HttpServlet {
 
     private final SellerService sellerService = new SellerService();
+    private final OrderDAO orderDAO = new OrderDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -100,6 +103,22 @@ public class SellerOrdersServlet extends HttpServlet {
             request.setAttribute("orderDate", lines.get(0).getOrderDate());
             request.setAttribute("orderTotal", lines.stream()
                     .map(SellerOrderLine::getSubtotal).reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add));
+
+            Order order = orderDAO.findById(orderId);
+            if (order != null) {
+                request.setAttribute("shippingFullName", order.getShippingFullName());
+                request.setAttribute("shippingPhone", order.getShippingPhone());
+                request.setAttribute("shippingAddressLine1", order.getShippingAddressLine1());
+                request.setAttribute("shippingAddressLine2", order.getShippingAddressLine2());
+                request.setAttribute("shippingCity", order.getShippingCity());
+                request.setAttribute("shippingState", order.getShippingState());
+                request.setAttribute("shippingPincode", order.getShippingPincode());
+                request.setAttribute("shippingLandmark", order.getShippingLandmark());
+                request.setAttribute("paymentMethod", order.getPaymentMethod());
+                request.setAttribute("paymentStatus", order.getPaymentStatus());
+                request.setAttribute("paymentReference", order.getPaymentReference());
+            }
+
             request.setAttribute("message", request.getParameter("message"));
             request.setAttribute("error", request.getParameter("error"));
             request.setAttribute("appName", "AyeshaMart Seller");

@@ -14,6 +14,7 @@ import java.sql.Statement;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Data access for the orders and order_items tables (Phase 5).
@@ -26,7 +27,13 @@ import java.util.List;
 public class OrderDAO {
 
     private static final String ORDER_COLUMNS =
-            "SELECT o.id, o.buyer_id, o.status, o.total_amount, o.created_at FROM orders o ";
+            "SELECT o.id, o.buyer_id, o.status, o.total_amount, o.created_at, "
+                    + "o.shipping_full_name, o.shipping_phone, o.shipping_address_line1, "
+                    + "o.shipping_address_line2, o.shipping_city, o.shipping_state, "
+                    + "o.shipping_pincode, o.shipping_landmark, "
+                    + "o.payment_method, o.payment_status, o.payment_reference, "
+                    + "u.name AS buyer_name "
+                    + "FROM orders o LEFT JOIN users u ON u.id = o.buyer_id ";
     private static final String SELECT_ORDER_BY_ID =
             ORDER_COLUMNS + "WHERE o.id = ?";
     private static final String SELECT_ORDERS_BY_BUYER =
@@ -81,13 +88,40 @@ public class OrderDAO {
     private static final String UPDATE_STATUS =
             "UPDATE orders SET status = ? WHERE id = ? AND status = ?";
 
-    /** Inserts an order with status PENDING on a caller-managed connection. */
+    private static final String COUNT_ORDERS =
+            "SELECT COUNT(*) FROM orders";
+    private static final String COUNT_ORDERS_BY_STATUS =
+            "SELECT COUNT(*) FROM orders WHERE status = ?";
+    private static final String SUM_ORDER_VALUE =
+            "SELECT COALESCE(SUM(total_amount), 0) FROM orders WHERE status <> 'CANCELLED'";
+
+    /**
+     * Inserts an order with status PENDING plus its delivery snapshot and
+     * mock-payment metadata on a caller-managed connection. Shipping and
+     * payment columns are written here exactly as they were at checkout.
+     */
     public Order insert(Connection connection, Order order) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(
-                "INSERT INTO orders (buyer_id, status, total_amount) VALUES (?, 'PENDING', ?)",
+                "INSERT INTO orders (buyer_id, status, total_amount, "
+                        + "shipping_full_name, shipping_phone, shipping_address_line1, "
+                        + "shipping_address_line2, shipping_city, shipping_state, "
+                        + "shipping_pincode, shipping_landmark, "
+                        + "payment_method, payment_status, payment_reference) "
+                        + "VALUES (?, 'PENDING', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 Statement.RETURN_GENERATED_KEYS)) {
             statement.setLong(1, order.getBuyerId());
             statement.setBigDecimal(2, order.getTotalAmount());
+            setStringOrNull(statement, 3, order.getShippingFullName());
+            setStringOrNull(statement, 4, order.getShippingPhone());
+            setStringOrNull(statement, 5, order.getShippingAddressLine1());
+            setStringOrNull(statement, 6, order.getShippingAddressLine2());
+            setStringOrNull(statement, 7, order.getShippingCity());
+            setStringOrNull(statement, 8, order.getShippingState());
+            setStringOrNull(statement, 9, order.getShippingPincode());
+            setStringOrNull(statement, 10, order.getShippingLandmark());
+            setStringOrNull(statement, 11, order.getPaymentMethod());
+            setStringOrNull(statement, 12, order.getPaymentStatus());
+            setStringOrNull(statement, 13, order.getPaymentReference());
             statement.executeUpdate();
             try (ResultSet keys = statement.getGeneratedKeys()) {
                 if (keys.next()) {
@@ -97,6 +131,14 @@ public class OrderDAO {
             order.setStatus("PENDING");
             order.setCreatedAt(LocalDateTime.now());
             return order;
+        }
+    }
+
+    private void setStringOrNull(PreparedStatement statement, int index, String value) throws SQLException {
+        if (value == null) {
+            statement.setNull(index, java.sql.Types.VARCHAR);
+        } else {
+            statement.setString(index, value);
         }
     }
 
@@ -283,6 +325,87 @@ public class OrderDAO {
         }
     }
 
+    // ------------------------------ admin (Phase 7) ------------------------------
+
+    public int countAll() throws SQLException {
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(COUNT_ORDERS)) {
+            try (ResultSet resultSet = statement.executeQuery()) {
+                resultSet.next();
+                return resultSet.getInt(1);
+            }
+        }
+    }
+
+    public int countByStatus(String status) throws SQLException {
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(COUNT_ORDERS_BY_STATUS)) {
+            statement.setString(1, status);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                resultSet.next();
+                return resultSet.getInt(1);
+            }
+        }
+    }
+
+    /** Gross value of all non-cancelled orders in the store. */
+    public java.math.BigDecimal sumTotalAmount() throws SQLException {
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(SUM_ORDER_VALUE)) {
+            try (ResultSet resultSet = statement.executeQuery()) {
+                resultSet.next();
+                return resultSet.getBigDecimal(1);
+            }
+        }
+    }
+
+    /**
+     * Every order (with buyer display name) for the Admin Orders page.
+     * Optional text search matches order id, buyer name, buyer email,
+     * status or payment method. All user input is bound as parameters.
+     */
+    public List<Order> findAllWithSearch(String query) throws SQLException {
+        String q = query == null ? null : query.trim();
+        boolean hasQuery = q != null && !q.isEmpty();
+
+        StringBuilder sql = new StringBuilder(ORDER_COLUMNS);
+        List<Object> params = new ArrayList<>();
+        if (hasQuery) {
+            sql.append("WHERE LOWER(u.name) LIKE ? OR LOWER(u.email) LIKE ? "
+                    + "OR UPPER(o.status) LIKE ? OR UPPER(o.payment_method) LIKE ? OR o.id = ?");
+            String like = "%" + q.toLowerCase(Locale.ROOT) + "%";
+            params.add(like);
+            params.add(like);
+            params.add(q.toUpperCase(Locale.ROOT));
+            params.add(q.toUpperCase(Locale.ROOT));
+            try {
+                params.add(Long.parseLong(q));
+            } catch (NumberFormatException e) {
+                params.add(-1L); // cannot match any id
+            }
+        }
+        sql.append(" ORDER BY o.created_at DESC, o.id DESC");
+
+        List<Order> orders = new ArrayList<>();
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                Object value = params.get(i);
+                if (value instanceof Long) {
+                    statement.setLong(i + 1, (Long) value);
+                } else {
+                    statement.setString(i + 1, (String) value);
+                }
+            }
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    orders.add(mapOrder(resultSet));
+                }
+            }
+        }
+        return orders;
+    }
+
     private Order mapOrder(ResultSet resultSet) throws SQLException {
         Order order = new Order();
         order.setId(resultSet.getLong("id"));
@@ -290,6 +413,18 @@ public class OrderDAO {
         order.setStatus(resultSet.getString("status"));
         order.setTotalAmount(resultSet.getBigDecimal("total_amount"));
         order.setCreatedAt(resultSet.getObject("created_at", LocalDateTime.class));
+        order.setShippingFullName(resultSet.getString("shipping_full_name"));
+        order.setShippingPhone(resultSet.getString("shipping_phone"));
+        order.setShippingAddressLine1(resultSet.getString("shipping_address_line1"));
+        order.setShippingAddressLine2(resultSet.getString("shipping_address_line2"));
+        order.setShippingCity(resultSet.getString("shipping_city"));
+        order.setShippingState(resultSet.getString("shipping_state"));
+        order.setShippingPincode(resultSet.getString("shipping_pincode"));
+        order.setShippingLandmark(resultSet.getString("shipping_landmark"));
+        order.setPaymentMethod(resultSet.getString("payment_method"));
+        order.setPaymentStatus(resultSet.getString("payment_status"));
+        order.setPaymentReference(resultSet.getString("payment_reference"));
+        order.setBuyerName(resultSet.getString("buyer_name"));
         return order;
     }
 
