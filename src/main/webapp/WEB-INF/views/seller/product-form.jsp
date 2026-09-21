@@ -2,6 +2,7 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 <%@ include file="../fragments/header.jsp" %>
+<%@ include file="nav.jsp" %>
 
 <main class="container narrow">
     <c:set var="editing" value="${mode == 'edit'}"/>

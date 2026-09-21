@@ -3,6 +3,7 @@
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 
 <%@ include file="../fragments/header.jsp" %>
+<%@ include file="nav.jsp" %>
 
 <main class="container">
     <div class="row-between">

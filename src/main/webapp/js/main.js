@@ -2,6 +2,14 @@
 (function () {
     "use strict";
 
+    // hide the server-rendered loading overlay once the page is interactive
+    var loading = document.querySelector(".page-loading");
+    if (loading) {
+        requestAnimationFrame(function () {
+            loading.classList.add("loaded");
+        });
+    }
+
     var alerts = document.querySelectorAll(".alert");
     for (var i = 0; i < alerts.length; i++) {
         (function (el) {

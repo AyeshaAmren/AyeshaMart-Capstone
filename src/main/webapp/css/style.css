@@ -1135,3 +1135,155 @@ section h2 {
     font-size: 0.95rem;
     line-height: 1.5;
 }
+
+/* ============================================================
+   Phase 6 - Seller module
+   ============================================================ */
+
+.seller-nav {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    background: #1c2333;
+    padding: 0.55rem 1.2rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.seller-nav-brand {
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.95rem;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    padding-right: 1rem;
+    border-right: 1px solid #3a4356;
+}
+
+.seller-nav-links {
+    display: flex;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+}
+
+.seller-nav-links a {
+    color: #cfd6e4;
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 0.45rem 0.85rem;
+    border-radius: 6px;
+}
+
+.seller-nav-links a:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 1rem;
+    margin-top: 1.2rem;
+}
+
+.stat-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    background: #fff;
+    border: 1px solid #eee;
+    border-left: 4px solid var(--primary);
+    border-radius: 10px;
+    padding: 1.15rem 1.2rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #212833;
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #6b7280;
+}
+
+.table-scroll {
+    overflow-x: auto;
+}
+
+.seller-table td,
+.seller-table th {
+    white-space: nowrap;
+}
+
+.status-badge.st-confirmed {
+    color: #1d4ed8;
+    background: #e3edff;
+    border: 1px solid #b7ccff;
+}
+
+.status-badge.st-shipped {
+    color: #6d28d9;
+    background: #f0e8ff;
+    border: 1px solid #d8c4ff;
+}
+
+.status-badge.st-delivered {
+    color: #15803d;
+    background: #e5f7ec;
+    border: 1px solid #bfe8cd;
+}
+
+.status-badge.st-cancelled {
+    color: #b91c1c;
+    background: #fdeeee;
+    border: 1px solid #f7c7c7;
+}
+
+.status-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    margin-top: 1.3rem;
+    background: #f7f8fa;
+    border: 1px solid #e6e8ec;
+    border-radius: 10px;
+    padding: 0.9rem 1.1rem;
+}
+
+.status-actions form {
+    margin: 0;
+}
+
+.page-loading {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.92);
+    transition: opacity 0.25s ease;
+}
+
+.page-loading span {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--primary);
+    background: #fff;
+    border: 1px solid #e6e8ec;
+    border-radius: 999px;
+    padding: 0.6rem 1.4rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.page-loading.loaded {
+    opacity: 0;
+    pointer-events: none;
+}
