@@ -7,7 +7,25 @@
     <section class="hero">
         <h1>Welcome to ${requestScope.appName}</h1>
         <p>${requestScope.tagline}: buy and sell products across multiple sellers.</p>
-        <p class="muted">Phase 1 - project setup and MVC skeleton. Features arrive in later phases.</p>
+
+        <c:choose>
+            <c:when test="${not empty sessionScope.userId}">
+                <p class="muted">Hello <c:out value="${sessionScope.userName}"/>! You are logged in as
+                    <c:out value="${sessionScope.userRole}"/>.</p>
+                <c:if test="${sessionScope.userRole == 'SELLER'}">
+                    <a class="btn" href="${pageContext.request.contextPath}/seller/products">Go to My Products</a>
+                </c:if>
+            </c:when>
+            <c:otherwise>
+                <c:if test="${param.logout == '1'}">
+                    <div class="alert alert-success">You have been logged out.</div>
+                </c:if>
+                <div class="row gap">
+                    <a class="btn" href="${pageContext.request.contextPath}/login">Login</a>
+                    <a class="btn ghost" href="${pageContext.request.contextPath}/register">Create account</a>
+                </div>
+            </c:otherwise>
+        </c:choose>
     </section>
 
     <section>

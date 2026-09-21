@@ -23,10 +23,15 @@ CREATE TABLE IF NOT EXISTS products (
     price       DECIMAL(10,2) NOT NULL CHECK (price >= 0),
     stock_qty   INT           NOT NULL DEFAULT 0 CHECK (stock_qty >= 0),
     category    VARCHAR(100),
+    image_url   VARCHAR(500),
     created_at  TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_products_seller FOREIGN KEY (seller_id) REFERENCES users (id)
 );
 
+-- Idempotent migration: adds image_url to databases created before Phase 3
+ALTER TABLE products ADD COLUMN IF NOT EXISTS image_url VARCHAR(500);
+
+-- Recreate dropped index if the ALTER removed it (no-op when already present)
 CREATE INDEX IF NOT EXISTS idx_products_seller   ON products (seller_id);
 CREATE INDEX IF NOT EXISTS idx_products_category ON products (category);
 
