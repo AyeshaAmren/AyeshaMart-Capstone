@@ -17,7 +17,7 @@
         <h1>Order Confirmed!</h1>
         <p class="confirmation-copy">
             Thank you for your purchase. This is a <strong>mock payment</strong> - no real
-            card was charged. Your order has been placed and the seller has been notified.
+            payment is collected. Your order has been placed and the seller has been notified.
         </p>
 
         <div class="confirmation-detail">
@@ -36,8 +36,15 @@
                 <strong>Rs. <c:out value="${order.totalAmount}"/></strong>
             </div>
             <div>
+                <span class="muted">Payment method</span>
+                <strong>
+                    <span class="pay-badge"><c:out value="${order.paymentMethod}"/></span>
+                    <span class="pay-badge pay-${fn:toLowerCase(order.paymentStatus)}"><c:out value="${order.paymentStatus}"/></span>
+                </strong>
+            </div>
+            <div>
                 <span class="muted">Status</span>
-                <strong><span class="status-badge st-pending">PENDING</span></strong>
+                <strong><span class="status-badge st-${fn:toLowerCase(order.status)}"><c:out value="${order.status}"/></span></strong>
             </div>
         </div>
 

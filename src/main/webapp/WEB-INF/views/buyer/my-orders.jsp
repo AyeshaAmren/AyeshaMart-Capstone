@@ -36,6 +36,7 @@
                     <th>Date</th>
                     <th>Items</th>
                     <th>Total</th>
+                    <th>Payment</th>
                     <th>Status</th>
                     <th></th>
                 </tr>
@@ -51,7 +52,11 @@
                         </td>
                         <td class="muted"><c:out value="${o.items.size()}"/> item(s)</td>
                         <td><strong>Rs. <c:out value="${o.totalAmount}"/></strong></td>
-                        <td><span class="status-badge st-pending"><c:out value="${o.status}"/></span></td>
+                        <td>
+                            <span class="pay-badge"><c:out value="${o.paymentMethod}"/></span>
+                            <span class="pay-badge pay-${fn:toLowerCase(o.paymentStatus)}"><c:out value="${o.paymentStatus}"/></span>
+                        </td>
+                        <td><span class="status-badge st-${fn:toLowerCase(o.status)}"><c:out value="${o.status}"/></span></td>
                         <td>
                             <a class="btn small" href="${pageContext.request.contextPath}/buyer/orders/details?id=${o.id}">View details</a>
                         </td>

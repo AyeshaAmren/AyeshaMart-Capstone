@@ -1,5 +1,7 @@
 package com.ayeshamart.controller;
 
+import com.ayeshamart.dto.PaymentDetails;
+import com.ayeshamart.dto.ShippingDetails;
 import com.ayeshamart.exception.ValidationException;
 import com.ayeshamart.model.CartItem;
 import com.ayeshamart.model.Order;
@@ -12,23 +14,28 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
- * Buyer checkout (Phase 5). All paths are BUYER-only via AuthFilter.
- * - GET  /buyer/checkout          -> order summary of the current cart.
- * - GET  /buyer/checkout/payment  -> mock payment form (server recalculates total).
+ * Buyer checkout (Phase 5 + 7). All paths are BUYER-only via AuthFilter.
+ * - GET  /buyer/checkout          -> order summary + shipping details form.
+ * - POST /buyer/checkout          -> validate + save the shipping snapshot.
+ * - GET  /buyer/checkout/payment  -> mock payment method selection.
  * - POST /buyer/checkout/pay      -> validate mock payment, place the order.
  *
  * The buyer id always comes from the session and every price, quantity and
  * total is recomputed from the database by OrderService - nothing from the
- * browser is trusted for the amounts.
+ * browser is trusted for the amounts. Card/UPI values are validated on the
+ * server and never stored; only method, status and reference are saved.
  */
 @WebServlet(urlPatterns = {"/buyer/checkout", "/buyer/checkout/payment", "/buyer/checkout/pay"})
 public class BuyerCheckoutServlet extends HttpServlet {
+
+    static final String SESSION_SHIPPING = "pendingShipping";
 
     private final CartService cartService = new CartService();
     private final OrderService orderService = new OrderService();
@@ -50,6 +57,8 @@ public class BuyerCheckoutServlet extends HttpServlet {
         long buyerId = AuthUtil.currentUserId(request);
         if (request.getRequestURI().endsWith("/pay")) {
             processPayment(buyerId, request, response);
+        } else if (request.getRequestURI().endsWith("/checkout")) {
+            saveShipping(buyerId, request, response);
         } else {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
@@ -74,17 +83,47 @@ public class BuyerCheckoutServlet extends HttpServlet {
         }
     }
 
+    private void saveShipping(long buyerId, HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        ShippingDetails shipping = new ShippingDetails(
+                request.getParameter("fullName"),
+                request.getParameter("phone"),
+                request.getParameter("addressLine1"),
+                request.getParameter("addressLine2"),
+                request.getParameter("city"),
+                request.getParameter("state"),
+                request.getParameter("pincode"),
+                request.getParameter("landmark"));
+
+        if (!shipping.isValid()) {
+            request.setAttribute("shipping", shipping);
+            request.setAttribute("error", shipping.validate().get(0));
+            showCheckout(buyerId, request, response);
+            return;
+        }
+
+        request.getSession(true).setAttribute(SESSION_SHIPPING, shipping);
+        response.sendRedirect(request.getContextPath() + "/buyer/checkout/payment");
+    }
+
     private void showPayment(long buyerId, HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        ShippingDetails shipping = session == null ? null
+                : (ShippingDetails) session.getAttribute(SESSION_SHIPPING);
+        if (shipping == null) {
+            response.sendRedirect(request.getContextPath() + "/buyer/checkout");
+            return;
+        }
         try {
             List<CartItem> items = cartService.cartFor(buyerId);
             if (items.isEmpty()) {
-                request.getSession(true).setAttribute("checkoutNotice", "Your cart is empty - add products before checking out");
-                response.sendRedirect(request.getContextPath() + "/cart");
+                response.sendRedirect(request.getContextPath() + "/buyer/checkout");
                 return;
             }
             request.setAttribute("items", items);
             request.setAttribute("cartTotal", cartService.cartTotal(buyerId));
+            request.setAttribute("shipping", shipping);
             request.setAttribute("error", request.getParameter("error"));
             request.setAttribute("appName", "AyeshaMart");
             request.getRequestDispatcher("/WEB-INF/views/buyer/payment.jsp").forward(request, response);
@@ -96,15 +135,27 @@ public class BuyerCheckoutServlet extends HttpServlet {
 
     private void processPayment(long buyerId, HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-        String paymentError = validatePaymentForm(request);
-        if (paymentError != null) {
-            response.sendRedirect(request.getContextPath() + "/buyer/checkout/payment?error="
-                    + urlEncode(paymentError));
+        HttpSession session = request.getSession(false);
+        ShippingDetails shipping = session == null ? null
+                : (ShippingDetails) session.getAttribute(SESSION_SHIPPING);
+        if (shipping == null) {
+            response.sendRedirect(request.getContextPath() + "/buyer/checkout");
             return;
         }
 
+        PaymentDetails payment = new PaymentDetails(
+                request.getParameter("paymentMethod"),
+                request.getParameter("upiId"),
+                request.getParameter("cardName"),
+                request.getParameter("cardNumber"),
+                request.getParameter("expiry"),
+                request.getParameter("cvv"));
+
         try {
-            Order order = orderService.placeOrder(buyerId);
+            Order order = orderService.placeOrder(buyerId, shipping, payment);
+            if (session != null) {
+                session.removeAttribute(SESSION_SHIPPING);
+            }
             response.sendRedirect(request.getContextPath()
                     + "/buyer/orders/confirmation?id=" + order.getId());
         } catch (ValidationException e) {
@@ -114,27 +165,6 @@ public class BuyerCheckoutServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/buyer/checkout/payment?error="
                     + urlEncode("Payment could not be completed. Please try again."));
         }
-    }
-
-    private String validatePaymentForm(HttpServletRequest request) {
-        String name = request.getParameter("cardName");
-        String number = request.getParameter("cardNumber");
-        String expiry = request.getParameter("expiry");
-        String cvv = request.getParameter("cvv");
-
-        if (name == null || name.isBlank()) {
-            return "Cardholder name is required";
-        }
-        if (number == null || !number.replaceAll("\\s", "").matches("\\d{12,19}")) {
-            return "Enter a valid card number (12-19 digits)";
-        }
-        if (expiry == null || !expiry.replaceAll("\\s", "").matches("(0[1-9]|1[0-2])/\\d{2}")) {
-            return "Enter a valid expiry date (MM/YY)";
-        }
-        if (cvv == null || !cvv.trim().matches("\\d{3,4}")) {
-            return "Enter a valid CVV (3-4 digits)";
-        }
-        return null;
     }
 
     private String urlEncode(String value) {

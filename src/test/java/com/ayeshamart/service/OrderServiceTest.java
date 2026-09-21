@@ -4,6 +4,8 @@ import com.ayeshamart.dao.CartDAO;
 import com.ayeshamart.dao.OrderDAO;
 import com.ayeshamart.dao.ProductDAO;
 import com.ayeshamart.dao.UserDAO;
+import com.ayeshamart.dto.PaymentDetails;
+import com.ayeshamart.dto.ShippingDetails;
 import com.ayeshamart.exception.ValidationException;
 import com.ayeshamart.model.CartItem;
 import com.ayeshamart.model.Order;
@@ -20,6 +22,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -227,5 +232,140 @@ class OrderServiceTest {
                 new User("Other", "other+ordersvc-scope@example.com", "hash", "BUYER")).getId();
         assertNotNull(service.orderForBuyer(buyer, order.getId()));
         assertThrows(ValidationException.class, () -> service.orderForBuyer(otherBuyer, order.getId()));
+    }
+
+    // ---------------------- Phase 7: shipping + payment ----------------------
+
+    private ShippingDetails shipping() {
+        return new ShippingDetails("Sara Buyer", "9876543210", "12 Main Road",
+                "Block C", "Chennai", "Tamil Nadu", "600001", "Near Metro");
+    }
+
+    @Test
+    void placeOrderStoresShippingSnapshotAndUpiPaymentMetadata() throws Exception {
+        setUpDatabase("ordersvc-upi");
+        Product book = product(seller, "UPI Book", "80.00", 4);
+        addToCart(buyer, book.getId(), 1);
+
+        OrderService service = new OrderService(new OrderDAO(), realCartDAO, realProductDAO);
+        Order order = service.placeOrder(buyer,
+                shipping(), new PaymentDetails("upi", "sara@okbank", null, null, null, null));
+
+        assertEquals("UPI", order.getPaymentMethod());
+        assertEquals(Order.PAYMENT_STATUS_SUCCESS, order.getPaymentStatus());
+        assertTrue(order.getPaymentReference().startsWith(Order.PAYMENT_PREFIX));
+
+        Order loaded = service.orderForBuyer(buyer, order.getId());
+        assertEquals("Sara Buyer", loaded.getShippingFullName());
+        assertEquals("9876543210", loaded.getShippingPhone());
+        assertEquals("12 Main Road", loaded.getShippingAddressLine1());
+        assertEquals("Block C", loaded.getShippingAddressLine2());
+        assertEquals("Chennai", loaded.getShippingCity());
+        assertEquals("Tamil Nadu", loaded.getShippingState());
+        assertEquals("600001", loaded.getShippingPincode());
+        assertEquals("Near Metro", loaded.getShippingLandmark());
+        assertEquals("UPI", loaded.getPaymentMethod());
+        assertEquals(Order.PAYMENT_STATUS_SUCCESS, loaded.getPaymentStatus());
+        assertNotNull(loaded.getPaymentReference());
+    }
+
+    @Test
+    void placeOrderWithCodStartsPaymentPending() throws Exception {
+        setUpDatabase("ordersvc-cod");
+        Product book = product(seller, "COD Book", "35.00", 3);
+        addToCart(buyer, book.getId(), 1);
+
+        OrderService service = new OrderService(new OrderDAO(), realCartDAO, realProductDAO);
+        Order order = service.placeOrder(buyer, shipping(), PaymentDetails.cod());
+
+        assertEquals("COD", order.getPaymentMethod());
+        assertEquals(Order.PAYMENT_STATUS_PENDING, order.getPaymentStatus());
+        assertNotNull(order.getPaymentReference());
+        assertEquals("COD", service.orderForBuyer(buyer, order.getId()).getPaymentMethod());
+    }
+
+    @Test
+    void placeOrderWithCardStoresNoSensitiveCardData() throws Exception {
+        setUpDatabase("ordersvc-card");
+        Product book = product(seller, "Card Book", "60.00", 2);
+        addToCart(buyer, book.getId(), 1);
+
+        OrderService service = new OrderService(new OrderDAO(), realCartDAO, realProductDAO);
+        Order order = service.placeOrder(buyer, shipping(),
+                new PaymentDetails("CARD", null, "Sara Buyer", "4111 1111 1111 1111", "12/29", "123"));
+
+        assertEquals("CARD", order.getPaymentMethod());
+        assertEquals(Order.PAYMENT_STATUS_SUCCESS, order.getPaymentStatus());
+
+        try (Connection connection = ConnectionManager.getConnection()) {
+            DatabaseMetaData meta = connection.getMetaData();
+            try (ResultSet columns = meta.getColumns(connection.getCatalog(), null, "ORDERS", null)) {
+                List<String> names = new java.util.ArrayList<>();
+                while (columns.next()) {
+                    names.add(columns.getString("COLUMN_NAME").toUpperCase());
+                }
+                assertFalse(names.contains("CARD_NUMBER"));
+                assertFalse(names.contains("CARD_CVV"));
+                assertFalse(names.contains("CARD_EXPIRY"));
+                assertFalse(names.contains("UPI_ID"));
+            }
+        }
+    }
+
+    @Test
+    void placeOrderRejectsInvalidShippingFields() throws Exception {
+        setUpDatabase("ordersvc-badshipping");
+        Product book = product(seller, "Ship Book", "20.00", 5);
+        addToCart(buyer, book.getId(), 1);
+
+        OrderService service = new OrderService(new OrderDAO(), realCartDAO, realProductDAO);
+        ShippingDetails bad = new ShippingDetails("", "12", "Home", "", "", "", "123", null);
+
+        ValidationException error = assertThrows(ValidationException.class,
+                () -> service.placeOrder(buyer, bad, PaymentDetails.cod()));
+        assertNotNull(error.getMessage());
+
+        assertEquals(5, realProductDAO.findById(book.getId()).getStockQty());
+        assertEquals(1, realCartDAO.findByUserId(buyer).size());
+    }
+
+    @Test
+    void placeOrderRejectsInvalidPaymentMethodWithoutTouchingStock() throws Exception {
+        setUpDatabase("ordersvc-badpayment");
+        Product book = product(seller, "Pay Book", "45.00", 6);
+        addToCart(buyer, book.getId(), 1);
+
+        OrderService service = new OrderService(new OrderDAO(), realCartDAO, realProductDAO);
+        PaymentDetails bad = new PaymentDetails("BITCOIN", null, null, null, null, null);
+
+        ValidationException error = assertThrows(ValidationException.class,
+                () -> service.placeOrder(buyer, shipping(), bad));
+        assertEquals("Unsupported payment method", error.getMessage());
+
+        assertEquals(6, realProductDAO.findById(book.getId()).getStockQty());
+        assertTrue(service.ordersFor(buyer).isEmpty());
+    }
+
+    @Test
+    void placeOrderRejectsUpiWithInvalidId() throws Exception {
+        setUpDatabase("ordersvc-badupi");
+        PaymentDetails badUp = new PaymentDetails("GPAY", "not-an-upi-id", null, null, null, null);
+        assertEquals("Enter a valid UPI ID (yourid@bankname)", badUp.validate());
+    }
+
+    @Test
+    void placeOrderRejectsCardWithInvalidDetails() throws Exception {
+        setUpDatabase("ordersvc-badcard");
+        PaymentDetails noName = new PaymentDetails("CARD", null, " ", "4111111111111111", "12/29", "123");
+        assertEquals("Cardholder name is required", noName.validate());
+
+        PaymentDetails badNumber = new PaymentDetails("CARD", null, "Sara", "1234", "12/29", "123");
+        assertEquals("Enter a valid card number (12-19 digits)", badNumber.validate());
+
+        PaymentDetails badExpiry = new PaymentDetails("CARD", null, "Sara", "4111111111111111", "13/29", "123");
+        assertEquals("Enter a valid expiry date (MM/YY)", badExpiry.validate());
+
+        PaymentDetails badCvv = new PaymentDetails("CARD", null, "Sara", "4111111111111111", "12/29", "12");
+        assertEquals("Enter a valid CVV (3-4 digits)", badCvv.validate());
     }
 }
