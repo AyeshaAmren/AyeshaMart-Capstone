@@ -34,6 +34,7 @@
                     </c:if>
                     <c:if test="${sessionScope.userRole == 'BUYER'}">
                         <a class="nav-link" href="${pageContext.request.contextPath}/cart">Cart</a>
+                        <a class="nav-link" href="${pageContext.request.contextPath}/buyer/orders">My Orders</a>
                     </c:if>
                     <c:if test="${sessionScope.userRole == 'ADMIN'}">
                         <a class="nav-link" href="${pageContext.request.contextPath}/admin">Admin</a>
