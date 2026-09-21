@@ -16,6 +16,7 @@ public class Product {
     private int stockQty;
     private String category;
     private String imageUrl;
+    private String sellerName;
     private LocalDateTime createdAt;
 
     public long getId() {
@@ -76,6 +77,14 @@ public class Product {
 
     public String getImageUrl() {
         return imageUrl;
+    }
+
+    public String getSellerName() {
+        return sellerName;
+    }
+
+    public void setSellerName(String sellerName) {
+        this.sellerName = sellerName;
     }
 
     public void setImageUrl(String imageUrl) {

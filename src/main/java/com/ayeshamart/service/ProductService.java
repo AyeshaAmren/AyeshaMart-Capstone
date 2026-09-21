@@ -7,6 +7,8 @@ import com.ayeshamart.model.Product;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -16,6 +18,11 @@ import java.util.List;
  */
 public class ProductService {
 
+    /** Default catalogue categories shown when the products table is empty. */
+    public static final List<String> DEFAULT_CATEGORIES = Arrays.asList(
+            "Electronics", "Fashion", "Grocery", "Beauty",
+            "Home/Kitchen", "Books", "Sports", "Accessories");
+
     private final ProductDAO productDAO;
 
     public ProductService() {
@@ -24,6 +31,34 @@ public class ProductService {
 
     public ProductService(ProductDAO productDAO) {
         this.productDAO = productDAO;
+    }
+
+    /**
+     * Buyer catalog lookup. Search is by name and/or description and may be
+     * combined with an exact category filter. Only in-stock products are
+     * returned.
+     */
+    public List<Product> search(String query, String category) throws SQLException {
+        return productDAO.search(query, category);
+    }
+
+    /** Reads one product for the product details page; throws if missing. */
+    public Product findDetail(long productId) throws SQLException {
+        Product product = productDAO.findById(productId);
+        if (product == null) {
+            throw new ValidationException("Product not found");
+        }
+        return product;
+    }
+
+    /**
+     * Category options for the filter drop-down: all categories currently
+     * present in the database, falling back to the standard list when there
+     * is no data yet.
+     */
+    public List<String> categories() throws SQLException {
+        List<String> fromDb = productDAO.findCategories();
+        return fromDb.isEmpty() ? new ArrayList<>(DEFAULT_CATEGORIES) : fromDb;
     }
 
     public Product create(long sellerId, ProductForm form) throws SQLException {

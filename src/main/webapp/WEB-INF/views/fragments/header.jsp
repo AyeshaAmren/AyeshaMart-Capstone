@@ -13,10 +13,14 @@
     <a class="brand" href="${pageContext.request.contextPath}/home">${requestScope.appName}</a>
     <nav>
         <a href="${pageContext.request.contextPath}/home">Home</a>
+        <a href="${pageContext.request.contextPath}/products">Browse</a>
         <c:choose>
             <c:when test="${not empty sessionScope.userId}">
                 <c:if test="${sessionScope.userRole == 'SELLER'}">
                     <a href="${pageContext.request.contextPath}/seller/products">My Products</a>
+                </c:if>
+                <c:if test="${sessionScope.userRole == 'BUYER'}">
+                    <a href="${pageContext.request.contextPath}/cart">Cart</a>
                 </c:if>
                 <span class="user">
                     <c:out value="${sessionScope.userName}"/> (<c:out value="${sessionScope.userRole}"/>)

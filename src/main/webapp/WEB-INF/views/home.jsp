@@ -12,9 +12,15 @@
             <c:when test="${not empty sessionScope.userId}">
                 <p class="muted">Hello <c:out value="${sessionScope.userName}"/>! You are logged in as
                     <c:out value="${sessionScope.userRole}"/>.</p>
-                <c:if test="${sessionScope.userRole == 'SELLER'}">
-                    <a class="btn" href="${pageContext.request.contextPath}/seller/products">Go to My Products</a>
-                </c:if>
+                <div class="row gap">
+                    <a class="btn" href="${pageContext.request.contextPath}/products">Browse products</a>
+                    <c:if test="${sessionScope.userRole == 'SELLER'}">
+                        <a class="btn ghost" href="${pageContext.request.contextPath}/seller/products">Go to My Products</a>
+                    </c:if>
+                    <c:if test="${sessionScope.userRole == 'BUYER'}">
+                        <a class="btn ghost" href="${pageContext.request.contextPath}/cart">View Cart</a>
+                    </c:if>
+                </div>
             </c:when>
             <c:otherwise>
                 <c:if test="${param.logout == '1'}">

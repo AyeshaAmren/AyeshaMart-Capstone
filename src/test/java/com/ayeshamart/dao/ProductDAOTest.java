@@ -56,6 +56,92 @@ class ProductDAOTest {
         return product;
     }
 
+    private Product product(String name, String description, String category, int stock) {
+        Product product = new Product();
+        product.setSellerId(seller1);
+        product.setName(name);
+        product.setDescription(description);
+        product.setPrice(new BigDecimal("10.00"));
+        product.setStockQty(stock);
+        product.setCategory(category);
+        return product;
+    }
+
+    @Test
+    void searchFindsByName() throws Exception {
+        Product created = productDAO.create(product("SearchUniqueHeadphones", "great sound", "Electronics", 5));
+
+        List<Product> results = productDAO.search("SearchUniqueHeadphones", null);
+
+        assertTrue(results.stream().anyMatch(p -> p.getId() == created.getId()));
+        assertEquals("Seller One", results.get(0).getSellerName());
+    }
+
+    @Test
+    void searchFindsByDescription() throws Exception {
+        Product created = productDAO.create(product("PlainName", "exploding cordless vibrato", "Books", 5));
+
+        List<Product> results = productDAO.search("cordless", null);
+
+        assertTrue(results.stream().anyMatch(p -> p.getId() == created.getId()));
+    }
+
+    @Test
+    void searchIsCaseInsensitiveAndEmptyResultAllowed() throws Exception {
+        productDAO.create(product("CaseSensitiveWidget", "desc", "Electronics", 5));
+
+        assertTrue(productDAO.search("casesensitive", null).stream()
+                .anyMatch(p -> p.getName().equals("CaseSensitiveWidget")));
+        assertTrue(productDAO.search("zzz-no-such-term-zzz", null).isEmpty());
+    }
+
+    @Test
+    void categoryFilterReturnsOnlyThatCategory() throws Exception {
+        Product book = productDAO.create(product("CatBook", "desc", "Books", 5));
+        Product gadget = productDAO.create(product("CatGadget", "desc", "Electronics", 5));
+
+        List<Product> results = productDAO.search(null, "Electronics");
+
+        assertTrue(results.stream().anyMatch(p -> p.getId() == gadget.getId()));
+        assertTrue(results.stream().noneMatch(p -> p.getId() == book.getId()));
+    }
+
+    @Test
+    void searchAndCategoryWorkTogether() throws Exception {
+        Product target = productDAO.create(product("RobotVacuumX", "home helper", "Home", 5));
+        productDAO.create(product("RobotVacuumX", "home helper", "Books", 5));
+        productDAO.create(product("OtherRobot", "home helper", "Home", 5));
+
+        List<Product> results = productDAO.search("RobotVacuumX", "Home");
+
+        assertEquals(1, results.size());
+        assertEquals(target.getId(), results.get(0).getId());
+    }
+
+    @Test
+    void outOfStockProductsAreHiddenFromCatalog() throws Exception {
+        Product inStock = productDAO.create(product("AvailableItem", "desc", "Electronics", 3));
+        productDAO.create(product("OutOfStockItem", "desc", "Electronics", 0));
+
+        List<Product> results = productDAO.search(null, null);
+
+        assertTrue(results.stream().anyMatch(p -> p.getId() == inStock.getId()));
+        assertTrue(results.stream().noneMatch(p -> p.getName().equals("OutOfStockItem")));
+    }
+
+    @Test
+    void findCategoriesReturnsDistinctValues() throws Exception {
+        productDAO.create(product("CatA", "desc", "Grocery", 5));
+        productDAO.create(product("CatB", "desc", "Grocery", 5));
+        productDAO.create(product("CatC", "desc", "Sports", 5));
+
+        List<String> categories = productDAO.findCategories();
+        assertTrue(categories.contains("Grocery"));
+        assertTrue(categories.contains("Sports"));
+        assertEquals(1, categories.stream().filter(c -> c.equals("Grocery")).count());
+        assertEquals(1, categories.stream().filter(c -> c.equals("Sports")).count());
+    }
+
     @Test
     void createThenFindById() throws Exception {
         Product created = productDAO.create(sampleProduct(seller1));
