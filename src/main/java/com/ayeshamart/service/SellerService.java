@@ -9,10 +9,7 @@ import com.ayeshamart.util.ConnectionManager;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Seller module business logic (Phase 6). Every query is scoped by the
@@ -22,24 +19,11 @@ import java.util.Map;
  */
 public class SellerService {
 
-    public static final String STATUS_PENDING = "PENDING";
-    public static final String STATUS_CONFIRMED = "CONFIRMED";
-    public static final String STATUS_SHIPPED = "SHIPPED";
-    public static final String STATUS_DELIVERED = "DELIVERED";
-    public static final String STATUS_CANCELLED = "CANCELLED";
-
-    /** Valid order lifecycle. Terminal statuses have no outgoing edges. */
-    private static final Map<String, List<String>> TRANSITIONS;
-
-    static {
-        Map<String, List<String>> transitions = new LinkedHashMap<>();
-        transitions.put(STATUS_PENDING, List.of(STATUS_CONFIRMED, STATUS_CANCELLED));
-        transitions.put(STATUS_CONFIRMED, List.of(STATUS_SHIPPED, STATUS_CANCELLED));
-        transitions.put(STATUS_SHIPPED, List.of(STATUS_DELIVERED));
-        transitions.put(STATUS_DELIVERED, List.of());
-        transitions.put(STATUS_CANCELLED, List.of());
-        TRANSITIONS = Collections.unmodifiableMap(transitions);
-    }
+    public static final String STATUS_PENDING = OrderStatus.PENDING;
+    public static final String STATUS_CONFIRMED = OrderStatus.CONFIRMED;
+    public static final String STATUS_SHIPPED = OrderStatus.SHIPPED;
+    public static final String STATUS_DELIVERED = OrderStatus.DELIVERED;
+    public static final String STATUS_CANCELLED = OrderStatus.CANCELLED;
 
     private final OrderDAO orderDAO;
     private final ProductDAO productDAO;
@@ -123,31 +107,15 @@ public class SellerService {
 
     /** Statuses a seller may advance an order to from the given status. */
     public List<String> allowedNextStatuses(String status) {
-        if (status == null) {
-            return List.of();
-        }
-        List<String> next = TRANSITIONS.get(status);
-        return next == null ? List.of() : next;
+        return OrderStatus.allowedNext(status);
     }
 
-    /** Server-side transition check - the source of truth for the workflow. */
+    /** Server-side transition check - delegates to the shared workflow. */
     private String transition(String current, String requested) {
-        if (current == null) {
-            throw new ValidationException("Order not found");
-        }
-        if (!TRANSITIONS.containsKey(requested)) {
-            throw new ValidationException("Unknown status: " + requested);
-        }
-        if (!TRANSITIONS.containsKey(current)) {
-            throw new ValidationException("Order status is final and cannot be changed");
-        }
-        if (!TRANSITIONS.get(current).contains(requested)) {
-            throw new ValidationException("Cannot change order status from " + current + " to " + requested);
-        }
-        return requested;
+        return OrderStatus.transition(current, requested);
     }
 
     private String normalize(String status) {
-        return status == null ? null : status.trim().toUpperCase();
+        return OrderStatus.normalize(status);
     }
 }
