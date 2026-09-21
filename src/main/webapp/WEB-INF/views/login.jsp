@@ -4,7 +4,10 @@
 <%@ include file="fragments/header.jsp" %>
 
 <main class="container narrow">
-    <h1>Login</h1>
+    <div class="auth-header">
+        <span class="brand-logo">AyeshaMart</span>
+        <h1 style="font-size:1.1rem;color:var(--muted);font-weight:400;margin-top:0.2rem">Login</h1>
+    </div>
 
     <c:if test="${param.registered == '1'}">
         <div class="alert alert-success">Account created! You can now login.</div>

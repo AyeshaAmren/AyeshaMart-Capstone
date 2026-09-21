@@ -4,7 +4,10 @@
 <%@ include file="fragments/header.jsp" %>
 
 <main class="container narrow">
-    <h1>Register</h1>
+    <div class="auth-header">
+        <span class="brand-logo">AyeshaMart</span>
+        <h1 style="font-size:1.1rem;color:var(--muted);font-weight:400;margin-top:0.2rem">Create account</h1>
+    </div>
 
     <c:if test="${not empty error}">
         <div class="alert alert-error"><c:out value="${error}"/></div>

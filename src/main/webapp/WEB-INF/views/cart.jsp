@@ -19,9 +19,11 @@
 
     <c:choose>
         <c:when test="${empty items}">
-            <div class="hero">
-                <p>Your cart is empty.</p>
-                <a class="btn" href="${pageContext.request.contextPath}/products">Browse products</a>
+            <div class="empty-state">
+                <h2>Your cart is empty</h2>
+                <p class="muted">Looks like you haven&rsquo;t added anything yet.</p>
+                <a class="btn accent" style="margin-top:0.9rem"
+                   href="${pageContext.request.contextPath}/products">Continue shopping</a>
             </div>
         </c:when>
         <c:otherwise>
