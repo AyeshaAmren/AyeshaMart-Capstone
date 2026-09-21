@@ -219,6 +219,82 @@ public class ProductDAO {
         }
     }
 
+    // ------------------------------ admin (Phase 7) ------------------------------
+
+    public int countAll() throws SQLException {
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "SELECT COUNT(*) FROM products")) {
+            try (ResultSet resultSet = statement.executeQuery()) {
+                resultSet.next();
+                return resultSet.getInt(1);
+            }
+        }
+    }
+
+    /**
+     * Admin product moderation list - includes out-of-stock products.
+     * Optional text search matches the product name, description or
+     * category. Every value is bound as a parameter.
+     */
+    public List<Product> findAllWithSearch(String query) throws SQLException {
+        String q = query == null ? null : query.trim();
+        boolean hasQuery = q != null && !q.isEmpty();
+
+        StringBuilder sql = new StringBuilder(COLUMNS);
+        if (hasQuery) {
+            String like = "%" + q.toLowerCase(Locale.ROOT) + "%";
+            sql.append("WHERE LOWER(p.name) LIKE ? OR LOWER(COALESCE(p.description, '')) LIKE ? "
+                    + "OR LOWER(COALESCE(p.category, '')) LIKE ? ");
+            try (Connection connection = ConnectionManager.getConnection()) {
+                return runList(connection, sql.append("ORDER BY p.created_at DESC, p.id DESC").toString(),
+                        like, like, like);
+            }
+        }
+        try (Connection connection = ConnectionManager.getConnection()) {
+            return runList(connection, sql.append("ORDER BY p.created_at DESC, p.id DESC").toString());
+        }
+    }
+
+    /**
+     * Admin remove-listing: deletes a product outright. Products referenced
+     * by orders or carts cannot be deleted (foreign key), so AdminService
+     * falls back to unlisting them instead.
+     */
+    public boolean deleteById(long productId) throws SQLException {
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "DELETE FROM products WHERE id = ?")) {
+            statement.setLong(1, productId);
+            return statement.executeUpdate() > 0;
+        }
+    }
+
+    /** Unlists a product by zeroing its stock (soft remove). */
+    public boolean unlist(long productId) throws SQLException {
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "UPDATE products SET stock_qty = 0 WHERE id = ?")) {
+            statement.setLong(1, productId);
+            return statement.executeUpdate() > 0;
+        }
+    }
+
+    private List<Product> runList(Connection connection, String sql, String... params) throws SQLException {
+        List<Product> products = new ArrayList<>();
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            for (int i = 0; i < params.length; i++) {
+                statement.setString(i + 1, params[i]);
+            }
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    products.add(mapRow(resultSet));
+                }
+            }
+        }
+        return products;
+    }
+
     private Product mapRow(ResultSet resultSet) throws SQLException {
         Product product = new Product();
         product.setId(resultSet.getLong("id"));

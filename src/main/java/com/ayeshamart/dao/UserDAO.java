@@ -9,6 +9,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * Data access for the users table. All SQL uses PreparedStatement.
@@ -56,6 +59,69 @@ public class UserDAO {
             statement.setString(1, email);
             try (ResultSet resultSet = statement.executeQuery()) {
                 return resultSet.next() ? mapRow(resultSet) : null;
+            }
+        }
+    }
+
+    // ------------------------------ admin (Phase 7) ------------------------------
+
+    /**
+     * All users, newest first. Optional text search matches name or email;
+     * only a very small projection is returned by the admin service.
+     */
+    public List<User> findAllWithSearch(String query) throws SQLException {
+        String q = query == null ? null : query.trim();
+        boolean hasQuery = q != null && !q.isEmpty();
+
+        StringBuilder sql = new StringBuilder(
+                "SELECT id, name, email, password_hash, role, created_at FROM users ");
+        if (hasQuery) {
+            sql.append("WHERE LOWER(name) LIKE ? OR LOWER(email) LIKE ? ");
+        }
+        sql.append("ORDER BY created_at DESC, id DESC");
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+            if (hasQuery) {
+                String like = "%" + q.toLowerCase(Locale.ROOT) + "%";
+                statement.setString(1, like);
+                statement.setString(2, like);
+            }
+            return mapList(statement);
+        }
+    }
+
+    private List<User> mapList(PreparedStatement statement) throws SQLException {
+        List<User> users = new ArrayList<>();
+        try (ResultSet resultSet = statement.executeQuery()) {
+            while (resultSet.next()) {
+                users.add(mapRow(resultSet));
+            }
+        }
+        return users;
+    }
+
+    public int countAll() throws SQLException {
+        return count("SELECT COUNT(*) FROM users");
+    }
+
+    public int countByRole(String role) throws SQLException {
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "SELECT COUNT(*) FROM users WHERE role = ?")) {
+            statement.setString(1, role);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                resultSet.next();
+                return resultSet.getInt(1);
+            }
+        }
+    }
+
+    private int count(String sql) throws SQLException {
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            try (ResultSet resultSet = statement.executeQuery()) {
+                resultSet.next();
+                return resultSet.getInt(1);
             }
         }
     }
