@@ -46,10 +46,11 @@ public final class DatabaseInitializer {
     }
 
     /**
-     * Phase 5 migration: orders previously allowed only
+     * Phase 5/6 migration: orders previously allowed only
      * PLACED/SHIPPED/DELIVERED/CANCELLED. Checkout creates orders with
-     * status PENDING, so any existing CHECK constraint on the orders table
-     * that does not already permit PENDING is dropped and replaced.
+     * status PENDING and the seller workflow adds CONFIRMED, so any
+     * existing CHECK constraint on the orders table that does not already
+     * permit CONFIRMED is dropped and replaced by the canonical set.
      * The constraint name is never guessed (auto-names like CONSTRAINT_8B);
      * it is read from information_schema so the migration is idempotent.
      */
@@ -66,7 +67,7 @@ public final class DatabaseInitializer {
                             + "  AND tc.table_name = 'ORDERS' "
                             + "  AND tc.constraint_type = 'CHECK' "
                             + "  AND cc.check_clause LIKE '%STATUS%' "
-                            + "  AND UPPER(cc.check_clause) NOT LIKE '%PENDING%'")) {
+                            + "  AND UPPER(cc.check_clause) NOT LIKE '%CONFIRMED%'")) {
                 while (resultSet.next()) {
                     toDrop.add(resultSet.getString(1));
                 }
@@ -79,7 +80,7 @@ public final class DatabaseInitializer {
 
             if (!toDrop.isEmpty()) {
                 statement.execute("ALTER TABLE orders ADD CONSTRAINT orders_status_check "
-                        + "CHECK (status IN ('PENDING', 'PLACED', 'SHIPPED', 'DELIVERED', 'CANCELLED'))");
+                        + "CHECK (status IN ('PENDING', 'CONFIRMED', 'SHIPPED', 'DELIVERED', 'CANCELLED'))");
             }
         } catch (SQLException e) {
             log.warn("Could not migrate orders status check (may already be correct)", e);

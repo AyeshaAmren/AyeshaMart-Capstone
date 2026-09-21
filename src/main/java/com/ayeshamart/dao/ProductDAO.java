@@ -169,6 +169,32 @@ public class ProductDAO {
         return categories;
     }
 
+    /** Total number of products owned by a seller (Seller Dashboard). */
+    public int countBySeller(long sellerId) throws SQLException {
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "SELECT COUNT(*) FROM products WHERE seller_id = ?")) {
+            statement.setLong(1, sellerId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                resultSet.next();
+                return resultSet.getInt(1);
+            }
+        }
+    }
+
+    /** Number of products a seller currently has available (stock_qty > 0). */
+    public int countActiveBySeller(long sellerId) throws SQLException {
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "SELECT COUNT(*) FROM products WHERE seller_id = ? AND stock_qty > 0")) {
+            statement.setLong(1, sellerId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                resultSet.next();
+                return resultSet.getInt(1);
+            }
+        }
+    }
+
     public boolean update(long productId, long sellerId, Product product) throws SQLException {
         try (Connection connection = ConnectionManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(UPDATE)) {
