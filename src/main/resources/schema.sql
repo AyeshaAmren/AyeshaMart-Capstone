@@ -75,6 +75,11 @@ CREATE TABLE IF NOT EXISTS cart_items (
 CREATE INDEX IF NOT EXISTS idx_cart_user    ON cart_items (user_id);
 CREATE INDEX IF NOT EXISTS idx_cart_product ON cart_items (product_id);
 
+-- Phase 4: a buyer can only ever have ONE row per product.
+-- Re-adding a product must increase the existing row quantity instead of
+-- creating a second duplicate row (the unique key is also what MERGE needs).
+ALTER TABLE cart_items ADD CONSTRAINT IF NOT EXISTS uq_cart_user_product UNIQUE (user_id, product_id);
+
 -- reviews: buyer ratings for products
 CREATE TABLE IF NOT EXISTS reviews (
     id         BIGINT AUTO_INCREMENT PRIMARY KEY,

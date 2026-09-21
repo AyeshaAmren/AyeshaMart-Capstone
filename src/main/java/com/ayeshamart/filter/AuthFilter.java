@@ -23,7 +23,7 @@ import java.nio.charset.StandardCharsets;
  * Public pages (home, login, register, css, js, h2-console) are never matched,
  * so they do not need a whitelist.
  */
-@WebFilter(urlPatterns = {"/seller/*", "/buyer/*", "/admin/*"})
+@WebFilter(urlPatterns = {"/seller/*", "/buyer/*", "/admin/*", "/cart/*"})
 public class AuthFilter implements Filter {
 
     @Override
@@ -36,7 +36,7 @@ public class AuthFilter implements Filter {
         String requiredRole;
         if (path.startsWith("/seller")) {
             requiredRole = "SELLER";
-        } else if (path.startsWith("/buyer")) {
+        } else if (path.startsWith("/buyer") || path.startsWith("/cart")) {
             requiredRole = "BUYER";
         } else {
             requiredRole = "ADMIN";

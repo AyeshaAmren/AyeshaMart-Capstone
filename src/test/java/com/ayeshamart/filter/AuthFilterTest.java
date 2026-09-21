@@ -103,4 +103,41 @@ class AuthFilterTest {
 
         verify(chain).doFilter(request, response);
     }
+
+    @Test
+    void anonymousUserIsRedirectedToLoginOnCart() throws Exception {
+        when(request.getContextPath()).thenReturn("/ayeshamart");
+        when(request.getRequestURI()).thenReturn("/ayeshamart/cart");
+        when(request.getSession(false)).thenReturn(null);
+
+        filter.doFilter(request, response, chain);
+
+        verify(response).sendRedirect("/ayeshamart/login?redirect=%2Fcart");
+        verify(chain, never()).doFilter(any(), any());
+    }
+
+    @Test
+    void buyerPassesOnCart() throws Exception {
+        HttpSession session = sessionWithRole("BUYER");
+        when(request.getContextPath()).thenReturn("/ayeshamart");
+        when(request.getRequestURI()).thenReturn("/ayeshamart/cart");
+        when(request.getSession(false)).thenReturn(session);
+
+        filter.doFilter(request, response, chain);
+
+        verify(chain).doFilter(request, response);
+    }
+
+    @Test
+    void sellerGetsForbiddenOnCart() throws Exception {
+        HttpSession session = sessionWithRole("SELLER");
+        when(request.getContextPath()).thenReturn("/ayeshamart");
+        when(request.getRequestURI()).thenReturn("/ayeshamart/cart");
+        when(request.getSession(false)).thenReturn(session);
+
+        filter.doFilter(request, response, chain);
+
+        verify(response).sendError(403, "Access denied - this page requires the BUYER role");
+        verify(chain, never()).doFilter(any(), any());
+    }
 }
