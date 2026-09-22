@@ -200,7 +200,16 @@ mvn test
 - `SecurityHeadersFilterTest` - security response headers are applied (H2 console skipped).
 - `EndToEndFlowTest` - full buyer -> seller -> admin journey on an in-memory H2 database.
 
-## Git history (Phase 2)
+## Git history
+
+Phase 2:
 
 - `feat: add H2 database schema and seed data` - schema.sql, seed.sql
 - `feat: configure HikariCP database connectivity` - listener, config, pool, console, tests, README
+
+Phase 8:
+
+- `feat: implement AI shopping chatbot` - chat providers, ChatService, /api/v1/chat, widget
+- `security: harden application security` - headers, HttpOnly cookie, health endpoint, logging
+- `feat: add H2 database management and demo queries` - database/demo-queries.sql + docs
+- `test: add application tests` - chatbot, provider, health, headers and end-to-end flow tests
