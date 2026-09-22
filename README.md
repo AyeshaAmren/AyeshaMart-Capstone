@@ -44,10 +44,18 @@ Login form values:
 | User Name | `sa`                                               |
 | Password | *(empty)*                                             |
 
-Steps:
-1. Start Tomcat (the app starts the H2 TCP server on port 9092 automatically).
-2. Open the console URL above, enter the JDBC URL / user / password.
-3. Click **Connect** and run SQL, e.g.:
+Steps to connect:
+1. Start Tomcat - the app's `DatabaseListener` starts the H2 TCP server on port
+   9092 automatically and seeds the persistent database file
+   `<user-home>/AyeshaMart/data/ayeshamart.mv.db` (first run only).
+2. Open `http://localhost:8080/ayeshamart/h2-console` in the browser.
+3. Leave the login form as:
+   | JDBC URL  | `jdbc:h2:tcp://localhost:9092/~/AyeshaMart/data/ayeshamart` |
+   | User Name | `sa`                                                          |
+   | Password  | *(empty)*                                                     |
+4. Click **Connect** - the left panel lists `USERS / PRODUCTS / ORDERS /
+   ORDER_ITEMS / CART_ITEMS / REVIEWS`.
+5. Run a quick sanity check, e.g.:
 
 ```sql
 SELECT * FROM users;
@@ -64,6 +72,13 @@ DELETE FROM products WHERE name = 'Demo Item';
 
 Any change made in the UI (later phases) is visible in the console and vice versa,
 because the app and console connect to the same persistent database.
+
+> **Access control (Phase 8):** the console is for **local development /
+> capstone demonstration only**. `H2ConsoleGuardFilter` allows loopback /
+> localhost requests and returns `403 Forbidden` for anything else.
+> - Production: set `AYESHAMART_H2_CONSOLE=false` to disable it entirely.
+> - Remote opt-in (not recommended): `AYESHAMART_H2_CONSOLE=true`.
+> - Do not expose the H2 TCP port (9092) on a public deployment.
 
 ### H2 Console demo queries (Phase 8)
 
