@@ -101,30 +101,6 @@
     </form>
 </main>
 
-<script>
-    (function () {
-        "use strict";
-        var form = document.getElementById("payment-form");
-        var radios = form.querySelectorAll("input[name='paymentMethod']");
-        var fieldsByMethod = {
-            "UPI": document.getElementById("fields-UPI"),
-            "GPAY": document.getElementById("fields-GPAY"),
-            "CARD": document.getElementById("fields-CARD"),
-            "COD": document.getElementById("fields-COD")
-        };
-
-        function show(method) {
-            Object.keys(fieldsByMethod).forEach(function (key) {
-                fieldsByMethod[key].hidden = key !== method;
-            });
-        }
-
-        radios.forEach(function (radio) {
-            radio.addEventListener("change", function () {
-                show(radio.value);
-            });
-        });
-    })();
-</script>
+<script src="${pageContext.request.contextPath}/js/payment.js"></script>
 
 <%@ include file="../fragments/footer.jsp" %>

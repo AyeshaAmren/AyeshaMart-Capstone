@@ -1,11 +1,36 @@
 <configuration>
+
+    <!--
+      AyeshaMart logging configuration (Phase 8).
+      - App logs at INFO: contains no passwords, no API keys, no card/CVV
+        data and no raw user chat messages (those are only ever counted).
+      - Hikari/org.h2 chatter is suppressed to WARN to keep logs readable.
+    -->
+
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
 
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/ayeshamart.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/ayeshamart.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>7</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Keep connection-pool and H2 internals quiet; never log JDBC passwords. -->
+    <logger name="com.zaxxer.hikari" level="WARN"/>
+    <logger name="org.h2" level="WARN"/>
+    <logger name="org.h2.server" level="WARN"/>
+
     <root level="INFO">
         <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FILE"/>
     </root>
 </configuration>
