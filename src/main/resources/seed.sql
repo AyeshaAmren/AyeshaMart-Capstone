@@ -1,5 +1,5 @@
 -- ============================================================
--- AyeshaMart - H2 Seed Data (Phase 2)
+-- AyeshaMart - H2 Seed Data (Phase 2 / books-only catalogue)
 -- Run ONLY when the users table is empty (see DatabaseInitializer),
 -- so existing persistent data is never overwritten.
 -- Passwords are bcrypt hashes - NEVER plaintext.
@@ -18,17 +18,11 @@ INSERT INTO users (id, name, email, password_hash, role) VALUES
 -- so new rows get ids 4, 5, ... instead of colliding with 1..3.
 ALTER TABLE users ALTER COLUMN id RESTART WITH 4;
 
--- sample products (seller id 2). Two items are exactly 500.00 so the
+-- sample books (seller id 2). Two items are exactly 500.00 so the
 -- demo query `SELECT * FROM products WHERE price = 500;` returns rows.
-INSERT INTO products (seller_id, name, description, price, stock_qty, category) VALUES
-(2, 'Wireless Mouse',     'Ergonomic 2.4GHz wireless mouse', 500.00,  25, 'Electronics'),
-(2, 'Noise Cancelling Headphones', 'Over-ear Bluetooth headphones', 1500.00,  10, 'Electronics'),
-(2, 'USB-C Hub',          '7-in-1 USB-C multiport adapter', 800.00,   30, 'Electronics'),
-(2, 'Java Programming',   'Introductory Java textbook for beginners', 500.00, 15, 'Science'),
-(2, 'Fiction Thriller',   'Bestselling mystery novel (paperback)', 350.00,  40, 'Thriller'),
-(2, 'Cotton T-Shirt',     '100% cotton unisex t-shirt, size M', 299.00,  50, 'Clothing'),
-(2, 'Desk Lamp',          'LED desk lamp with dimmer', 500.00,   20, 'Home'),
-(2, 'Running Shoes',      'Lightweight running shoes, size 42', 2200.00, 12, 'Sports');
+INSERT INTO products (seller_id, name, description, price, stock_qty, category, image_url) VALUES
+(2, 'Java Programming',   'Introductory Java textbook for beginners', 500.00, 15, 'Science',  'https://picsum.photos/seed/ayesha-java-programming/300/400'),
+(2, 'Fiction Thriller',   'Bestselling mystery novel (paperback)', 350.00, 40, 'Thriller', 'https://picsum.photos/seed/ayesha-fiction-thriller/300/400');
 
 -- Book catalogue (Phase 4 enrichment): 24 titles across book sub-categories.
 -- Image URLs use a deterministic placeholder image service so every book

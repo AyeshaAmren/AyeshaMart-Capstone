@@ -15,3 +15,6 @@ Thumbs.db
 
 # Tomcat deployment artifacts
 *.war
+
+# Session notes with credentials (do NOT commit)
+ASSISTANT_MEMORY.md

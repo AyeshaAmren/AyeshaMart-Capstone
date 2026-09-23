@@ -21,6 +21,10 @@
         <servlet-name>H2Console</servlet-name>
         <url-pattern>/h2-console/*</url-pattern>
     </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>H2Console</servlet-name>
+        <url-pattern>/h2-console</url-pattern>
+    </servlet-mapping>
 
     <welcome-file-list>
         <welcome-file>index.jsp</welcome-file>
@@ -34,7 +38,15 @@
             <http-only>true</http-only>
             <secure>false</secure>
         </cookie-config>
-        <tracking-mode>COOKIE</tracking-mode>
+        <!--
+          Tracking mode not restricted to COOKIE:
+          the H2 web console threads its frame navigation with
+          session ids in URLs (?jsessionid=...), so locking Tomcat
+          to cookie-only tracking makes the console drop its login
+          state and bounce back to the Connect page. Tomcat's default
+          (sequential) keeps cookies primary while still honouring
+          the console's URL session ids.
+        -->
     </session-config>
 
 </web-app>

@@ -61,7 +61,7 @@ Steps to connect:
 SELECT * FROM users;
 SELECT * FROM products;
 SELECT * FROM products WHERE price = 500;
-SELECT * FROM products WHERE category = 'Electronics';
+SELECT * FROM products WHERE category = 'Fiction';
 
 -- INSERT / UPDATE / DELETE demos
 INSERT INTO products (seller_id, name, description, price, stock_qty, category)

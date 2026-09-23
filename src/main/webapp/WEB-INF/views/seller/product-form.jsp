@@ -43,7 +43,7 @@
             <select name="category" required>
                 <option value="" disabled
                     <c:if test="${empty currentCategory}">selected</c:if>>Select a category</option>
-                <c:forEach var="cat" items="${['Electronics','Fiction','Thriller','Mystery','Children','Fantasy','Biography','Science','Self-Help','Books','Clothing','Home','Sports','Toys','Other']}">
+                <c:forEach var="cat" items="${['Fiction','Thriller','Mystery','Children','Fantasy','Biography','Science','Self-Help','Books']}">
                     <option value="${cat}"
                         <c:if test="${currentCategory == cat}">selected</c:if>><c:out value="${cat}"/></option>
                 </c:forEach>

@@ -37,7 +37,7 @@ class ProductServiceTest {
     }
 
     private ProductForm validForm() {
-        return new ProductForm("Wireless Keyboard", "Nice keyboard", "750.00", "12", "Electronics", null);
+        return new ProductForm("Wireless Keyboard", "Nice keyboard", "750.00", "12", "Fiction", null);
     }
 
     private Product ownedProduct(long sellerId) {

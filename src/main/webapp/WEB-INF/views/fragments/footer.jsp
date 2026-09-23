@@ -9,7 +9,6 @@
         </div>
         <div>
             <h4>Categories</h4>
-            <a href="${pageContext.request.contextPath}/products?category=Electronics">Electronics</a>
             <a href="${pageContext.request.contextPath}/products?category=Fiction">Fiction</a>
             <a href="${pageContext.request.contextPath}/products?category=Thriller">Thriller</a>
             <a href="${pageContext.request.contextPath}/products?category=Children">Children</a>

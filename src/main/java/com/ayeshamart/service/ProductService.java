@@ -20,8 +20,8 @@ public class ProductService {
 
     /** Default catalogue categories shown when the products table is empty. */
     public static final List<String> DEFAULT_CATEGORIES = Arrays.asList(
-            "Electronics", "Fashion", "Grocery", "Beauty",
-            "Home/Kitchen", "Books", "Sports", "Accessories");
+            "Fiction", "Thriller", "Mystery", "Children",
+            "Fantasy", "Biography", "Science", "Self-Help", "Books");
 
     private final ProductDAO productDAO;
 

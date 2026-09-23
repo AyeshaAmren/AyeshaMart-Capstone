@@ -21,8 +21,9 @@ public class FaqChatProvider implements ChatProvider {
                 "what do you sell", "what products", "products you sell", "what is ayeshamart",
                 "about ayeshamart", "what is this site", "tell me about", "categories",
                 "books available", "products available", "store sell")) {
-            return "AyeshaMart is a multi-seller e-commerce demo. Sellers list products "
-                    + "(books, electronics, clothing, sports and more) and buyers search them by "
+            return "AyeshaMart is a multi-seller bookstore demo. Sellers list books "
+                    + "(Fiction, Thriller, Mystery, Children, Fantasy, Biography, "
+                    + "Science and Self-Help) and buyers search them by "
                     + "name or category. Browse everything from the home page or the catalogue.";
 
         }

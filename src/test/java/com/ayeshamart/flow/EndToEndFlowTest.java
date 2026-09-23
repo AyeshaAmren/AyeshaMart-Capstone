@@ -75,12 +75,12 @@ class EndToEndFlowTest {
 
         ProductService productService = new ProductService();
         Product product = productService.create(seller.getId(),
-                new ProductForm("Flow Widget", "Flow test widget", "149.00", "20", "Electronics", null));
+                new ProductForm("Flow Widget", "Flow test widget", "149.00", "20", "Fiction", null));
         long productId = product.getId();
         assertTrue(productId > 0);
 
         productService.update(seller.getId(), productId,
-                new ProductForm("Flow Widget Pro", "Flow test widget v2", "199.00", "15", "Electronics", null));
+                new ProductForm("Flow Widget Pro", "Flow test widget v2", "199.00", "15", "Fiction", null));
         Product reloaded = new ProductDAO().findById(productId);
         assertEquals("Flow Widget Pro", reloaded.getName());
         assertEquals(0, new java.math.BigDecimal("199.00").compareTo(reloaded.getPrice()));

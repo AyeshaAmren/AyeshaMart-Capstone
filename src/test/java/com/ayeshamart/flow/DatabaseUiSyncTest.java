@@ -53,7 +53,7 @@ class DatabaseUiSyncTest {
                 new RegisterRequest("Sync Seller", "syncseller@example.com", "SyncPass1", "SyncPass1", "SELLER"));
 
         Product created = new ProductService().create(seller.getId(),
-                new ProductForm("Sync Widget", "added from the app", "149.00", "10", "Electronics", null));
+                new ProductForm("Sync Widget", "added from the app", "149.00", "10", "Fiction", null));
 
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(

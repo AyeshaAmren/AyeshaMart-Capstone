@@ -52,7 +52,7 @@ class ProductDAOTest {
         product.setDescription("desc");
         product.setPrice(new BigDecimal("125.50"));
         product.setStockQty(7);
-        product.setCategory("Electronics");
+        product.setCategory("Fiction");
         return product;
     }
 
@@ -69,7 +69,7 @@ class ProductDAOTest {
 
     @Test
     void searchFindsByName() throws Exception {
-        Product created = productDAO.create(product("SearchUniqueHeadphones", "great sound", "Electronics", 5));
+        Product created = productDAO.create(product("SearchUniqueHeadphones", "great sound", "Fiction", 5));
 
         List<Product> results = productDAO.search("SearchUniqueHeadphones", null);
 
@@ -88,7 +88,7 @@ class ProductDAOTest {
 
     @Test
     void searchIsCaseInsensitiveAndEmptyResultAllowed() throws Exception {
-        productDAO.create(product("CaseSensitiveWidget", "desc", "Electronics", 5));
+        productDAO.create(product("CaseSensitiveWidget", "desc", "Fiction", 5));
 
         assertTrue(productDAO.search("casesensitive", null).stream()
                 .anyMatch(p -> p.getName().equals("CaseSensitiveWidget")));
@@ -98,9 +98,9 @@ class ProductDAOTest {
     @Test
     void categoryFilterReturnsOnlyThatCategory() throws Exception {
         Product book = productDAO.create(product("CatBook", "desc", "Books", 5));
-        Product gadget = productDAO.create(product("CatGadget", "desc", "Electronics", 5));
+        Product gadget = productDAO.create(product("CatGadget", "desc", "Fiction", 5));
 
-        List<Product> results = productDAO.search(null, "Electronics");
+        List<Product> results = productDAO.search(null, "Fiction");
 
         assertTrue(results.stream().anyMatch(p -> p.getId() == gadget.getId()));
         assertTrue(results.stream().noneMatch(p -> p.getId() == book.getId()));
@@ -108,11 +108,11 @@ class ProductDAOTest {
 
     @Test
     void searchAndCategoryWorkTogether() throws Exception {
-        Product target = productDAO.create(product("RobotVacuumX", "home helper", "Home", 5));
+        Product target = productDAO.create(product("RobotVacuumX", "home helper", "Thriller", 5));
         productDAO.create(product("RobotVacuumX", "home helper", "Books", 5));
-        productDAO.create(product("OtherRobot", "home helper", "Home", 5));
+        productDAO.create(product("OtherRobot", "home helper", "Thriller", 5));
 
-        List<Product> results = productDAO.search("RobotVacuumX", "Home");
+        List<Product> results = productDAO.search("RobotVacuumX", "Thriller");
 
         assertEquals(1, results.size());
         assertEquals(target.getId(), results.get(0).getId());
@@ -120,8 +120,8 @@ class ProductDAOTest {
 
     @Test
     void outOfStockProductsAreHiddenFromCatalog() throws Exception {
-        Product inStock = productDAO.create(product("AvailableItem", "desc", "Electronics", 3));
-        productDAO.create(product("OutOfStockItem", "desc", "Electronics", 0));
+        Product inStock = productDAO.create(product("AvailableItem", "desc", "Fiction", 3));
+        productDAO.create(product("OutOfStockItem", "desc", "Fiction", 0));
 
         List<Product> results = productDAO.search(null, null);
 
@@ -131,15 +131,15 @@ class ProductDAOTest {
 
     @Test
     void findCategoriesReturnsDistinctValues() throws Exception {
-        productDAO.create(product("CatA", "desc", "Grocery", 5));
-        productDAO.create(product("CatB", "desc", "Grocery", 5));
-        productDAO.create(product("CatC", "desc", "Sports", 5));
+        productDAO.create(product("CatA", "desc", "Biography", 5));
+        productDAO.create(product("CatB", "desc", "Biography", 5));
+        productDAO.create(product("CatC", "desc", "Fantasy", 5));
 
         List<String> categories = productDAO.findCategories();
-        assertTrue(categories.contains("Grocery"));
-        assertTrue(categories.contains("Sports"));
-        assertEquals(1, categories.stream().filter(c -> c.equals("Grocery")).count());
-        assertEquals(1, categories.stream().filter(c -> c.equals("Sports")).count());
+        assertTrue(categories.contains("Biography"));
+        assertTrue(categories.contains("Fantasy"));
+        assertEquals(1, categories.stream().filter(c -> c.equals("Biography")).count());
+        assertEquals(1, categories.stream().filter(c -> c.equals("Fantasy")).count());
     }
 
     @Test
@@ -152,7 +152,7 @@ class ProductDAOTest {
         assertEquals(seller1, found.getSellerId());
         assertEquals(0, new BigDecimal("125.50").compareTo(found.getPrice()));
         assertEquals(7, found.getStockQty());
-        assertEquals("Electronics", found.getCategory());
+        assertEquals("Fiction", found.getCategory());
     }
 
     @Test

@@ -54,20 +54,20 @@ DELETE FROM users WHERE email = 'demo@example.com';
 
 -- SELECT - all products / by category / by price
 SELECT * FROM products;
-SELECT id, name, price, stock_qty, category FROM products WHERE category = 'Electronics';
+SELECT id, name, price, stock_qty, category FROM products WHERE category = 'Fiction';
 SELECT * FROM products WHERE price = 500;
 
--- INSERT - a demo product from the seeded seller (id 2).
+-- INSERT - a demo book from the seeded seller (id 2).
 INSERT INTO products (seller_id, name, description, price, stock_qty, category)
-VALUES (2, 'Demo Widget', 'Created from the H2 console', 199.00, 5, 'Misc');
+VALUES (2, 'Demo Book', 'Created from the H2 console', 199.00, 5, 'Fiction');
 
 -- UPDATE - change price / stock. NOTE: see section 7 for the UI <-> DB
 -- synchronization demo (UPDATE ... WHERE id = 1).
-UPDATE products SET price = 249.00 WHERE name = 'Demo Widget';
+UPDATE products SET price = 249.00 WHERE name = 'Demo Book';
 UPDATE products SET stock_qty = stock_qty - 1 WHERE id = 8;
 
 -- DELETE - remove the demo product (no order/cart references it yet).
-DELETE FROM products WHERE name = 'Demo Widget';
+DELETE FROM products WHERE name = 'Demo Book';
 
 -- WARNING: products referenced by order_items or cart_items cannot be hard
 -- deleted (foreign keys). The application unlists them instead (stock -> 0).
@@ -111,7 +111,7 @@ SELECT oi.* FROM order_items oi JOIN orders o ON o.id = oi.order_id ORDER BY o.i
 -- INSERT - add a line to an existing order, using subqueries so both
 -- foreign keys (order_id, product_id) stay valid.
 INSERT INTO order_items (order_id, product_id, quantity, unit_price)
-SELECT o.id, (SELECT id FROM products WHERE name = 'Wireless Mouse'), 1, 500.00
+SELECT o.id, (SELECT id FROM products WHERE name = 'The Silent City'), 1, 450.00
 FROM orders o
 WHERE o.buyer_id = (SELECT id FROM users WHERE email = 'buyer@ayeshamart.com')
   AND o.status = 'PENDING';
@@ -120,7 +120,7 @@ WHERE o.buyer_id = (SELECT id FROM users WHERE email = 'buyer@ayeshamart.com')
 UPDATE order_items SET quantity = 2
 WHERE order_id = (SELECT id FROM orders WHERE buyer_id =
                   (SELECT id FROM users WHERE email = 'buyer@ayeshamart.com'))
-  AND product_id = (SELECT id FROM products WHERE name = 'Wireless Mouse');
+  AND product_id = (SELECT id FROM products WHERE name = 'The Silent City');
 
 -- DELETE - line items are deleted automatically when their order is deleted
 -- (ON DELETE CASCADE); this removes just one line.
@@ -139,13 +139,13 @@ SELECT * FROM cart_items;
 -- INSERT - a demo cart row for the seeded buyer (id 3) and product (id 1).
 INSERT INTO cart_items (user_id, product_id, quantity)
 SELECT (SELECT id FROM users  WHERE email = 'buyer@ayeshamart.com'),
-       (SELECT id FROM products WHERE name = 'Wireless Mouse'),
+       (SELECT id FROM products WHERE name = 'The Silent City'),
        2;
 
 -- UPDATE - change the quantity of a cart row
 UPDATE cart_items SET quantity = 3
 WHERE user_id    = (SELECT id FROM users   WHERE email = 'buyer@ayeshamart.com')
-  AND product_id = (SELECT id FROM products WHERE name = 'Wireless Mouse');
+  AND product_id = (SELECT id FROM products WHERE name = 'The Silent City');
 
 -- DELETE - empty the buyer's cart (or just that row)
 DELETE FROM cart_items
@@ -162,19 +162,19 @@ SELECT r.*, p.name AS product FROM reviews r JOIN products p ON p.id = r.product
 
 -- INSERT - a 4-star review from the seeded buyer on the seeded product.
 INSERT INTO reviews (product_id, user_id, rating, comment)
-SELECT (SELECT id FROM products WHERE name = 'Wireless Mouse'),
+SELECT (SELECT id FROM products WHERE name = 'The Silent City'),
        (SELECT id FROM users   WHERE email = 'buyer@ayeshamart.com'),
        4,
        'Good demo product, fast delivery.';
 
 -- UPDATE - bump the rating
 UPDATE reviews SET rating = 5, comment = 'Updated: very happy with it.'
-WHERE product_id = (SELECT id FROM products WHERE name = 'Wireless Mouse')
+WHERE product_id = (SELECT id FROM products WHERE name = 'The Silent City')
   AND user_id    = (SELECT id FROM users   WHERE email = 'buyer@ayeshamart.com');
 
 -- DELETE - only the row you created, not every review
 DELETE FROM reviews
-WHERE product_id = (SELECT id FROM products WHERE name = 'Wireless Mouse');
+WHERE product_id = (SELECT id FROM products WHERE name = 'The Silent City');
 
 
 -- ============================================================
@@ -187,7 +187,7 @@ WHERE product_id = (SELECT id FROM products WHERE name = 'Wireless Mouse');
 
 -- (b) Database -> UI: run the update below, then open the product page in
 --     the browser and refresh - the new price must be visible.
---     (id 1 is the seeded "Wireless Mouse" in a fresh database.)
+--     (id 1 is the seeded "Java Programming" in a fresh database.)
 UPDATE products SET price = 599.00 WHERE id = 1;
 
 -- Show the changed row, then revert or keep as you like.

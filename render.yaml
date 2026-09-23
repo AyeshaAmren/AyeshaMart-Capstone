@@ -1,0 +1,16 @@
+# AyeshaMart - Render Blueprint (https://render.com)
+# A free web service built from the multi-stage Dockerfile.
+# Port is supplied by Render via $PORT; the entrypoint rebinds Tomcat.
+services:
+  - type: web
+    name: ayeshamart
+    runtime: docker
+    repo: https://github.com/AyeshaAmren/AyeshaMart-Capstone
+    branch: main
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /ayeshamart/api/v1/health
+    autoDeploy: true
+    envVars:
+      - key: AYESHAMART_H2_CONSOLE
+        value: "false"

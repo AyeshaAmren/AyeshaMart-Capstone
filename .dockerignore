@@ -1,0 +1,14 @@
+.git
+.gitignore
+.idea
+*.iml
+*.war
+target/
+logs/
+*.log
+surefire-reports/
+ASSISTANT_MEMORY.md
+Dockerfile
+docker/
+railway.toml
+render.yaml

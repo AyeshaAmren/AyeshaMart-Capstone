@@ -13,12 +13,12 @@
     <div class="navbar">
         <a class="brand" href="${pageContext.request.contextPath}/home">
             AyeshaMart
-            <small>Shop Smarter</small>
+            <small>Bookstore Extraordinaire</small>
         </a>
 
         <form class="search-bar" method="get"
               action="${pageContext.request.contextPath}/products">
-            <input type="text" name="q" placeholder="Search for products, books and more..."
+            <input type="text" name="q" placeholder="Search for books and more..."
                    aria-label="Search products">
             <button type="submit" title="Search">&rarr;</button>
         </form>
@@ -51,7 +51,6 @@
 
     <nav class="nav-cats" aria-label="Categories">
         <a href="${pageContext.request.contextPath}/products">All</a>
-        <a href="${pageContext.request.contextPath}/products?category=Electronics">Electronics</a>
         <a href="${pageContext.request.contextPath}/products?category=Fiction">Fiction</a>
         <a href="${pageContext.request.contextPath}/products?category=Thriller">Thriller</a>
         <a href="${pageContext.request.contextPath}/products?category=Mystery">Mystery</a>
@@ -60,8 +59,5 @@
         <a href="${pageContext.request.contextPath}/products?category=Biography">Biography</a>
         <a href="${pageContext.request.contextPath}/products?category=Science">Science</a>
         <a href="${pageContext.request.contextPath}/products?category=Self-Help">Self-Help</a>
-        <a href="${pageContext.request.contextPath}/products?category=Sports">Sports</a>
-        <a href="${pageContext.request.contextPath}/products?category=Home">Home</a>
-        <a href="${pageContext.request.contextPath}/products?category=Clothing">Clothing</a>
     </nav>
 </header>
